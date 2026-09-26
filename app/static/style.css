@@ -1,0 +1,1034 @@
+/* body {
+    font-family: Arial, sans-serif;
+    background-color: #2a3a4f;
+    color: #8d97ad;
+} */
+
+.grid-container {
+    padding: 20px;
+}
+
+.game-info {
+    bottom: 0;
+    left: 0;
+    text-align: left !important;
+    /* background-image: linear-gradient(to top, rgba(7, 0, 91, 0.49), #003aa800); */
+    background-image: linear-gradient(to top, rgba(7, 0, 91, 0.71), #001233a1);
+    padding: 10px;
+    border-radius: 0 0 8px 8px;
+    border-top: 1px solid #d5d5d5bd;
+    top: unset;
+}
+
+.game-tag {
+    font-size: 1em;
+    margin-right: 5px;
+}
+
+.card {
+    border-radius: 8px !important;
+    /* linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent 50%), */
+}
+
+.card-img {
+    mask-image: linear-gradient(to top, rgba(7, 0, 91, 0.71), #001233ed);
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.game-title {
+    font-size: 1.1rem;
+    /* font-size: 18px; */
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: white;
+}
+
+p.game-description {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+.tags-container {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    margin-top: 10px;
+}
+
+/* A title id is one unbreakable 16-character token: without this it pushes the
+   overlay wider than the card and hangs off its edge. */
+.game-title,
+p.game-description {
+    overflow-wrap: break-word;
+}
+
+/* The metadata can only be an overlay while the banner is wide enough to hold it. On
+   a phone the text wraps to several lines, the overlay outgrows the image it is
+   anchored to, and the badges - placed from the card's own corner - land on top of
+   that text. Below md it stops being an overlay and becomes a block under the banner,
+   where growing costs nothing. */
+@media (max-width: 767.98px) {
+    .game-info {
+        position: static;
+    }
+
+    .card-img {
+        /* The fade was there to keep text legible over the banner; nothing sits on it
+           once the metadata is below. */
+        mask-image: none;
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .tags-container {
+        position: static;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: .5rem;
+    }
+
+    .game-tag:last-child {
+        margin-right: 0;
+    }
+}
+
+.btn-outline-info {
+    --bs-btn-hover-color: #fff;
+}
+
+.text-bg-warning {
+    color: #fff !important;
+    background-color: RGBA(var(--bs-warning-rgb),var(--bs-bg-opacity,1)) !important;
+    font-weight: normal;
+}
+
+.text-bg-info {
+    color: #fff !important;
+    background-color: RGBA(var(--bs-info-rgb),var(--bs-bg-opacity,1)) !important;
+    font-weight: normal;
+  }
+
+.col-1, .col-2, .col-3, .col-4, .col-6, .col-12 {
+    display: flex;
+    flex-direction: column;
+}
+
+.col-1 > .card, .col-2 > .card, .col-3 > .card, .col-4 > .card, .col-6 > .card, .col-12 > .card {
+    flex: 1;
+}
+
+/* Update popover */
+.popover-body {
+    max-height: 200px; /* Set your desired max height */
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+/* Input code form */
+.form-control-code {
+    font-family: monospace;
+    font-size: .875em;
+    background-color: var(--bs-dark-bg-subtle);
+    color: var(--bs-code-color);
+}
+
+/* hr */
+.hr-settings {
+    margin-top: 2rem !important;
+}
+
+/* Settings / Tasks sidebar */
+.settings-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    width: 200px;
+    flex: 0 0 200px;
+    height: 100vh;
+    padding-top: 1rem;
+}
+
+.settings-sidebar .nav-link {
+    color: var(--bs-secondary-color);
+    border-radius: 0;
+    border-left: 3px solid transparent;
+}
+
+.settings-sidebar .nav-link:hover {
+    color: var(--bs-body-color);
+    background-color: var(--bs-secondary-bg);
+}
+
+.settings-sidebar .nav-link.active {
+    color: var(--bs-body-color);
+    background-color: var(--bs-secondary-bg);
+    border-left-color: var(--bs-primary);
+}
+
+.settings-panel {
+    min-width: 0;  /* let long task names shrink instead of widening the row */
+}
+
+/* Below md the sidebar becomes a row of tabs across the top. 767.98 rather than 768,
+   so the switch happens exactly where Bootstrap's own md rules take over. */
+@media (max-width: 767.98px) {
+    .settings-sidebar {
+        position: static;
+        width: 100%;
+        flex-basis: 100%;
+        height: auto;
+        /* The divider now separates the tabs from the panel below them, not from a
+           column beside them. */
+        border-right: 0 !important;
+        border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+    }
+
+    .settings-sidebar .nav {
+        flex-direction: row !important;
+    }
+
+    /* The panel's flex-basis is 0, so a full-width sidebar alone never overflows the
+       row and the two stay on one line: the sidebar takes all of it and the panel is
+       squeezed to nothing against the right edge. Giving the panel a basis of its own
+       is what pushes it onto the next line. */
+    .settings-panel {
+        flex-basis: 100%;
+    }
+
+    /* A left border marks the active item in a column of links; in a row of tabs it
+       belongs underneath. */
+    .settings-sidebar .nav-link {
+        border-left: 0;
+        border-bottom: 3px solid transparent;
+    }
+
+    .settings-sidebar .nav-link.active {
+        border-bottom-color: var(--bs-primary);
+    }
+}
+
+/* Task list */
+.task-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.task-row {
+    margin-bottom: .5rem;
+    transition: opacity .5s ease-out;
+}
+
+/* The queue is unbounded — a library scan queues one task per file — so it scrolls
+   inside a fixed frame instead of running the page off the bottom of the screen.
+   The gutter and padding keep the scrollbar off the cancel button, which sits flush
+   right and is otherwise covered by an overlay scrollbar the moment the list overflows. */
+.task-scroll {
+    max-height: 26rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding-right: .75rem;
+}
+
+.task-row.task-fading {
+    opacity: 0;
+}
+
+.task-head {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.task-name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-meta {
+    margin-left: auto;
+    font-size: .875rem;
+    white-space: nowrap;
+}
+
+/* Bare icon buttons: the rows are already dense, and bordered buttons competed with the
+   status icons for attention. Muted by default; the per-row cross opts into danger. */
+.icon-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 1;
+    color: var(--bs-secondary-color);
+}
+
+.icon-btn:hover:not(:disabled) {
+    color: var(--bs-body-color);
+}
+
+.icon-btn:disabled {
+    opacity: .25;
+}
+
+.task-cancel {
+    font-size: .8rem;
+    color: var(--bs-danger);
+}
+
+.task-cancel:hover:not(:disabled) {
+    color: var(--bs-danger-text-emphasis);
+}
+
+/* Matches the scroll container's padding, so the section's action lines up with the
+   per-row crosses below it rather than sitting a scrollbar's width to their right. */
+.task-section-head {
+    display: flex;
+    align-items: center;
+    padding-right: .75rem;
+}
+
+/* Too slim for a label, so the percentage is shown in the row's meta text instead. */
+.task-progress {
+    height: .8rem;
+    margin-top: .25rem;
+}
+
+/* The bar is driven by percentages arriving a few times a second; easing the width
+   turns those steps into continuous movement. */
+.task-progress .progress-bar {
+    transition: width .3s linear;
+}
+
+.task-children {
+    list-style: none;
+    padding-left: 1.25rem;
+    margin: .375rem 0 0;
+    border-left: 2px solid var(--bs-border-color);
+}
+
+.task-children:empty {
+    display: none;
+}
+
+
+/* Stats */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1.25rem;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+.stat-label {
+    font-weight: 500;
+}
+
+.stat-note {
+    color: var(--bs-secondary-color);
+    font-size: .8rem;
+}
+
+/* Two columns rather than auto-fit: four sections in a row would put each table's
+   figures a screen away from the next, and the tables are all the same shape anyway. */
+.stat-sections {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .stat-sections {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Three short columns: left to itself the table would stretch across its half of the
+   panel and strand the figures a screen away from their labels. */
+.stat-table {
+    max-width: 30rem;
+}
+
+.stat-table th:not(:first-child),
+.stat-table td:not(:first-child) {
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* A library root is a full path, and it now shares the row with a second table:
+   wrapping keeps the figures beside it rather than pushed out of the column. */
+.stat-table td:first-child {
+    overflow-wrap: anywhere;
+}
+
+/* The library grid's one-line summary above the cards. */
+.library-stats {
+    color: var(--bs-secondary-color);
+    text-align: center;
+}
+
+.library-stats span + span::before {
+    content: " · ";
+}
+
+.spin {
+    display: inline-block;
+    animation: spin 1.4s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Only highlight the active filter label, not the entire row */
+.btn-check:active + .btn-outline-primary,
+.btn-check:focus + .btn-outline-primary,
+.btn-check:checked + .btn-outline-primary {
+    background-color: #0d6efd;
+    color: #fff;
+    outline: none;
+    border-color: #0d6efd;
+}
+
+.btn-group:focus-within,
+.btn-group:active,
+.btn-group:focus,
+.dropdown-item:active,
+.dropdown-item:focus {
+    background: none;
+    box-shadow: none;
+}
+
+/* Library */
+.navbar {
+    background-color: #141a16 !important;
+    border-color: rgba(224, 238, 226, .1) !important;
+}
+
+.navbar-brand {
+    font-family: Bahnschrift, "Aptos Display", sans-serif;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.navbar .nav-link.active {
+    color: #c1f17a;
+}
+
+.library-page {
+    --library-bg: #111512;
+    --library-surface: #1a211c;
+    --library-surface-raised: #222b25;
+    --library-line: rgba(222, 238, 226, .12);
+    --library-accent: #c1f17a;
+    --library-ink: #eff4ee;
+    --library-muted: #a0ada2;
+    max-width: 1900px;
+    min-height: calc(100vh - 58px);
+    margin-inline: auto;
+    padding: 2rem clamp(1rem, 3vw, 3rem) 3rem;
+    background-color: var(--library-bg);
+    background-image:
+        linear-gradient(rgba(193, 241, 122, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(193, 241, 122, .025) 1px, transparent 1px);
+    background-size: 44px 44px;
+    color: var(--library-ink);
+}
+
+.library-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: .4rem 0 1.5rem;
+    border-bottom: 1px solid var(--library-line);
+}
+
+.library-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin: 0 0 .55rem;
+    color: var(--library-accent);
+    font-family: Bahnschrift, "Aptos Display", sans-serif;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+}
+
+.library-eyebrow span {
+    width: .45rem;
+    height: .45rem;
+    border-radius: 50%;
+    background: var(--library-accent);
+    box-shadow: 0 0 12px rgba(193, 241, 122, .55);
+}
+
+.library-heading h1 {
+    color: var(--library-ink);
+    font-family: Bahnschrift, "Aptos Display", sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.library-intro {
+    margin: .35rem 0 0;
+    color: var(--library-muted);
+    font-size: .95rem;
+}
+
+.library-result-count {
+    flex: 0 0 auto;
+    margin: 0 0 .15rem;
+    padding: .45rem .7rem;
+    border: 1px solid var(--library-line);
+    border-radius: 6px;
+    color: var(--library-accent);
+    background: rgba(193, 241, 122, .06);
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.library-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .65rem;
+    margin-top: 1.25rem;
+    padding: .8rem;
+    border: 1px solid var(--library-line);
+    border-radius: 8px;
+    background: rgba(26, 33, 28, .94);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .16);
+}
+
+.toolbar-control {
+    display: flex;
+    align-items: center;
+    min-height: 2.5rem;
+}
+
+.toolbar-search {
+    flex: 1 1 16rem;
+    min-width: min(100%, 12rem);
+}
+
+.library-toolbar .btn-primary {
+    --bs-btn-color: var(--library-ink);
+    --bs-btn-bg: var(--library-surface-raised);
+    --bs-btn-border-color: var(--library-line);
+    --bs-btn-hover-color: #111512;
+    --bs-btn-hover-bg: var(--library-accent);
+    --bs-btn-hover-border-color: var(--library-accent);
+    --bs-btn-active-color: #111512;
+    --bs-btn-active-bg: var(--library-accent);
+    --bs-btn-active-border-color: var(--library-accent);
+    --bs-btn-disabled-color: var(--library-muted);
+    --bs-btn-disabled-bg: var(--library-surface);
+    --bs-btn-disabled-border-color: var(--library-line);
+    min-height: 2.5rem;
+}
+
+.library-toolbar .view-toggle-btn.active {
+    color: #111512;
+    background: var(--library-accent);
+    border-color: var(--library-accent);
+}
+
+.library-toolbar .input-group-text,
+.library-toolbar .form-control {
+    min-height: 2.5rem;
+    border-color: var(--library-line);
+    color: var(--library-ink);
+    background-color: #111713;
+}
+
+.library-toolbar .input-group-text {
+    color: var(--library-muted);
+}
+
+.library-toolbar .form-control::placeholder {
+    color: #89968b;
+}
+
+.library-toolbar .form-control:focus {
+    border-color: rgba(193, 241, 122, .7);
+    box-shadow: 0 0 0 .2rem rgba(193, 241, 122, .12);
+}
+
+.toolbar-density {
+    gap: .55rem;
+    padding-inline: .4rem;
+    color: var(--library-muted);
+}
+
+.toolbar-density .form-range {
+    width: 6.5rem;
+    margin: 0;
+}
+
+.library-toolbar .dropdown-menu {
+    border-color: var(--library-line);
+    background-color: var(--library-surface);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, .35);
+}
+
+.library-toolbar .dropdown-item {
+    color: var(--library-ink);
+}
+
+.library-toolbar .dropdown-item:hover,
+.library-toolbar .dropdown-item:focus {
+    color: var(--library-ink);
+    background: var(--library-surface-raised);
+}
+
+.library-toolbar .dropdown-divider {
+    border-color: var(--library-line);
+}
+
+.library-toolbar .btn-outline-primary {
+    --bs-btn-color: var(--library-muted);
+    --bs-btn-border-color: var(--library-line);
+    --bs-btn-hover-color: var(--library-ink);
+    --bs-btn-hover-bg: var(--library-surface-raised);
+    --bs-btn-hover-border-color: var(--library-line);
+}
+
+.library-toolbar .btn-check:checked + .btn-outline-primary {
+    color: #111512;
+    background: var(--library-accent);
+    border-color: var(--library-accent);
+}
+
+.library-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: .45rem;
+    margin-top: 1rem !important;
+    text-align: left;
+}
+
+.library-stats span {
+    padding: .3rem .6rem;
+    border: 1px solid var(--library-line);
+    border-radius: 999px;
+    color: var(--library-muted);
+    background: rgba(26, 33, 28, .72);
+    font-size: .75rem;
+}
+
+.library-stats span + span::before {
+    content: none;
+}
+
+.library-page .grid-container {
+    padding: 1.25rem 0 .5rem;
+}
+
+.library-page .game-card {
+    overflow: hidden;
+    border: 1px solid var(--library-line);
+    border-radius: 8px !important;
+    background: var(--library-surface);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .2);
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    animation: library-card-enter .35s ease both;
+}
+
+.library-page .game-col:nth-child(2) .game-card { animation-delay: .035s; }
+.library-page .game-col:nth-child(3) .game-card { animation-delay: .07s; }
+.library-page .game-col:nth-child(4) .game-card { animation-delay: .105s; }
+
+.library-page .game-card:hover {
+    z-index: 1;
+    transform: translateY(-3px);
+    border-color: rgba(193, 241, 122, .48);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, .3);
+}
+
+.library-page .card-img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 0;
+    mask-image: none;
+}
+
+.library-page .game-info {
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1rem;
+    border: 0;
+    border-radius: 0;
+    background: linear-gradient(180deg, transparent 28%, rgba(10, 14, 11, .94) 100%);
+}
+
+.library-page .game-title {
+    max-width: 100%;
+    padding-right: 6.5rem;
+    color: #fff;
+    font-family: Bahnschrift, "Aptos Display", sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .45);
+}
+
+.library-page .game-description {
+    color: rgba(239, 244, 238, .72);
+    font-size: .75rem;
+}
+
+.library-page .tags-container {
+    right: .7rem;
+    bottom: .7rem;
+    display: flex;
+    gap: .3rem;
+}
+
+.library-page .game-tag {
+    display: inline-grid;
+    min-width: 1.55rem;
+    min-height: 1.45rem;
+    place-items: center;
+    margin: 0;
+    border: 1px solid rgba(255, 255, 255, .14);
+    font-size: .68rem;
+}
+
+.library-page .text-bg-info {
+    color: #101714 !important;
+    background-color: #8de0cb !important;
+}
+
+.library-page .text-bg-warning {
+    color: #20140d !important;
+    background-color: #f0b276 !important;
+}
+
+.library-page .text-bg-success {
+    color: #101714 !important;
+    background-color: var(--library-accent) !important;
+}
+
+.library-page .game-icon {
+    max-width: 100%;
+    margin: .35rem;
+    padding: .45rem;
+    border: 1px solid var(--library-line);
+    border-radius: 7px;
+    background: var(--library-surface);
+    transition: border-color .2s ease, transform .2s ease;
+}
+
+.library-page .game-icon:hover {
+    transform: translateY(-2px);
+    border-color: rgba(193, 241, 122, .55);
+}
+
+.library-page .pagination {
+    gap: .3rem;
+}
+
+.library-page .page-link {
+    min-width: 2.4rem;
+    border: 1px solid var(--library-line);
+    border-radius: 5px;
+    color: var(--library-ink);
+    background: var(--library-surface);
+    text-align: center;
+}
+
+.library-page .page-item.active .page-link {
+    border-color: var(--library-accent);
+    color: #111512;
+    background: var(--library-accent);
+}
+
+.library-page .page-item.disabled .page-link {
+    color: #748077;
+    background: rgba(26, 33, 28, .55);
+}
+
+@keyframes library-card-enter {
+    from { opacity: 0; transform: translateY(7px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 767.98px) {
+    .library-page {
+        padding-top: 1.25rem;
+    }
+
+    .library-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: .75rem;
+    }
+
+    .library-heading h1 {
+        font-size: 1.7rem;
+    }
+
+    .library-toolbar {
+        gap: .5rem;
+        padding: .65rem;
+    }
+
+    .toolbar-search {
+        order: -1;
+        flex-basis: 100%;
+    }
+
+    .toolbar-density {
+        margin-left: auto;
+    }
+
+    .library-page .game-info {
+        position: static;
+        inset: auto;
+        display: block;
+        padding: .8rem;
+        background: var(--library-surface);
+    }
+
+    .library-page .game-title {
+        padding-right: 0;
+    }
+
+    .library-page .tags-container {
+        position: static;
+        justify-content: flex-end;
+        margin-top: .55rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .library-page *,
+    .library-page *::before,
+    .library-page *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+    }
+}
+
+/* Steam-inspired blue theme */
+:root {
+    --bs-body-color: #c7d5e0;
+    --bs-body-bg: #1b2838;
+    --bs-emphasis-color: #fff;
+    --bs-secondary-color: rgba(199, 213, 224, .75);
+    --bs-secondary-bg: #171a21;
+    --bs-tertiary-bg: #203043;
+    --bs-border-color: #2a475e;
+    --bs-primary: #1a9fff;
+    --bs-primary-rgb: 26, 159, 255;
+    --bs-primary-text-emphasis: #66c0f4;
+    --bs-link-color: #66c0f4;
+    --bs-link-hover-color: #8bd5ff;
+    --bs-success: #a4d007;
+    --bs-success-rgb: 164, 208, 7;
+}
+
+body {
+    color: #c7d5e0;
+    background-color: #1b2838;
+    background-image: linear-gradient(145deg, #1b2838 0%, #171a21 78%);
+    background-attachment: fixed;
+    font-family: Bahnschrift, "Aptos", sans-serif;
+    letter-spacing: 0;
+}
+
+.navbar {
+    background-color: #171a21 !important;
+    border-color: rgba(102, 192, 244, .14) !important;
+}
+
+.navbar .nav-link.active {
+    color: #66c0f4;
+}
+
+.library-page {
+    --library-bg: #1b2838;
+    --library-surface: #16202d;
+    --library-surface-raised: #20374b;
+    --library-line: rgba(102, 192, 244, .16);
+    --library-accent: #66c0f4;
+    --library-ink: #c7d5e0;
+    --library-muted: #8f98a0;
+    background-color: var(--library-bg);
+    background-image:
+        linear-gradient(rgba(102, 192, 244, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(102, 192, 244, .025) 1px, transparent 1px);
+}
+
+.library-eyebrow span {
+    box-shadow: 0 0 12px rgba(102, 192, 244, .55);
+}
+
+.library-result-count {
+    background: rgba(102, 192, 244, .07);
+}
+
+.library-toolbar {
+    background: rgba(22, 32, 45, .96);
+}
+
+.library-toolbar .input-group-text,
+.library-toolbar .form-control {
+    background-color: #101820;
+}
+
+.library-toolbar .form-control::placeholder {
+    color: #8f98a0;
+}
+
+.library-toolbar .form-control:focus {
+    border-color: rgba(102, 192, 244, .7);
+    box-shadow: 0 0 0 .2rem rgba(102, 192, 244, .14);
+}
+
+.library-page .game-card:hover {
+    border-color: rgba(102, 192, 244, .55);
+}
+
+.library-page .game-info {
+    background: linear-gradient(180deg, transparent 28%, rgba(11, 20, 29, .96) 100%);
+}
+
+.library-page .text-bg-info {
+    color: #10202b !important;
+    background-color: #66c0f4 !important;
+}
+
+.library-page .text-bg-success {
+    color: #172000 !important;
+    background-color: #a4d007 !important;
+}
+
+.library-page .game-icon:hover {
+    border-color: rgba(102, 192, 244, .55);
+}
+
+.library-page .page-item.active .page-link {
+    color: #10202b;
+}
+
+.login-page {
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    color: #c7d5e0;
+    background-color: #0e141b;
+    background-image:
+        linear-gradient(135deg, rgba(102, 192, 244, .09), transparent 48%),
+        linear-gradient(315deg, #171a21 0%, #1b2838 54%, #0e141b 100%);
+}
+
+.login-layout {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.login-page .login-column {
+    width: min(100%, 28rem);
+    max-width: 100%;
+    flex: 0 0 min(100%, 28rem);
+    padding-inline: 1rem;
+}
+
+.login-panel.card {
+    overflow: hidden;
+    border: 1px solid #2a475e !important;
+    border-radius: 6px !important;
+    background: linear-gradient(180deg, #1b2838 0%, #171a21 100%);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .42);
+}
+
+.login-panel .card-body {
+    padding: 2rem;
+}
+
+.login-panel form > p {
+    margin-bottom: 1.4rem;
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.login-panel .form-control {
+    min-height: 2.8rem;
+    border-color: #2a475e;
+    border-radius: 3px;
+    color: #fff;
+    background-color: #101820;
+}
+
+.login-panel .form-control::placeholder {
+    color: #8f98a0;
+}
+
+.login-panel .form-control:focus {
+    border-color: #66c0f4;
+    box-shadow: 0 0 0 .2rem rgba(102, 192, 244, .16);
+}
+
+.login-panel .btn-primary {
+    min-height: 2.8rem;
+    border: 0;
+    border-radius: 3px;
+    color: #10202b;
+    background: linear-gradient(90deg, #06bfff 0%, #2d73ff 100%);
+    font-weight: 700;
+}
+
+.login-panel .btn-primary:hover {
+    color: #10202b;
+    background: linear-gradient(90deg, #33cbff 0%, #5590ff 100%);
+}
+
+@media (max-width: 575.98px) {
+    .login-panel .card-body {
+        padding: 1.5rem;
+    }
+}
+
+.navbar .language-select,
+.login-language-picker .language-select {
+    min-width: 7.5rem;
+    border-color: #2a475e;
+    color: #c7d5e0;
+    background-color: #101820;
+    font-size: .8rem;
+}
+
+.login-page {
+    position: relative;
+}
+
+.login-language-picker {
+    position: absolute;
+    z-index: 1;
+    top: 1.25rem;
+    right: clamp(1rem, 3vw, 2rem);
+}

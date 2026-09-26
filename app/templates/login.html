@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container login-page">
+    <div class="login-language-picker">
+        <label class="visually-hidden" for="languageSelect">Language</label>
+        <select id="languageSelect" class="form-select form-select-sm language-select"
+            aria-label="Language">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+        </select>
+    </div>
+
+    <div class="row login-layout d-flex flex-column justify-content-center align-items-center">
+        <div class="col-sm-4 login-column">
+            <div class="card login-panel">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='logo/logo.svg') }}" style="width: 128px;" alt="NS eShop Server">
+                    </div>
+                    <form method="POST" action="/login"><p>Please login to your account</p>
+                        <div class="mb-4">
+                            <input class="form-control" name="user" id="exampleInputEmail1" placeholder="Username">
+                        </div>
+                        <div class="mb-4">
+                            <input type="password" class="form-control" id="exampleInputPassword1" name="password" placeholder="Password">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="remember" class="form-check-input" id="exampleCheck1">
+                            <label class="form-check-label" for="exampleCheck1">Remember me</label>
+                        </div>
+                        <div class="d-grid text-center pt-1 mb-5 pb-1">
+                            <input type="hidden" name="next" value="">
+                            <button type="submit" class="btn btn-primary btn-block">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

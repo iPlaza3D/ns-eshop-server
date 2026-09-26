@@ -1,0 +1,1469 @@
+{% extends "settings_layout.html" %}
+{% block panel %}
+            <div class="settings-container container mt-3">
+
+                {% if admin_account_created == false %}
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Missing admin account!</h4>
+                    <p>NS eShop Server requires an admin account to enable authentication. Until an account with admin rights is
+                        created, <strong>authentication is disabled, anyone can access and change the configuration of
+                            your shop!</strong>
+                        <br>
+                        Add an admin account <a href="/admin/settings#Authentication" class="alert-link">here under
+                            Authentication</a>.
+                    </p>
+                </div>
+                {% endif %}
+
+                <div id="missingKeysAlert" class="alert alert-warning alert-dismissible fade show d-none" role="alert">
+                    <h4 class="alert-heading">Missing / invalid console keys file!</h4>
+                    Console keys are required to decrypt any Nintendo content, including
+                    backups. NS eShop Server uses this to identify files, regardless of the filename.</br>
+                    <strong>Titles will be missed or misidentified if you don't fill in your keys!</strong>
+                    See <a target="_blank" href="https://gitea.com/KudbiOdd/easy-switch-hacking-shise/wiki/Dump-device-keys" class="alert-link">this guide</a> on
+                    how to extract the
+                    keys from your console, and upload them <a href="/admin/settings#consoleKeysInputLabel" class="alert-link">here
+                        in NS eShop Server.</a>
+                    <hr>
+                    If keys are missing, all files <strong>must contain "[TITLEID][vVERSION]"</strong>, else the file won't be recognized.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div id="missingShopHostAlert" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;">
+                    <h4 class="alert-heading">Missing shop Host!</h4>
+                    Host verification from outside the local network is disabled if the shop <code>Host</code> is
+                    missing, configure it <a href="/admin/settings#shopHostInput" class="alert-link">here
+                        in NS eShop Server</a> to prevent someone else stealing from your shop.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <h2 id="Authentication">Authentication</h2>
+
+                <div class="table-responsive">
+                    <table class="table table-hover caption-top" id="userTable">
+                        <caption>List of users:</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">User</th>
+                                <th scope="col">Permissions</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="d-inline-flex gap-1">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseNewUser" aria-expanded="false" aria-controls="collapseNewUser">
+                        Add new user
+                    </button>
+                </p>
+                <div class="collapse" id="collapseNewUser">
+                    <div class="card card-body">
+                        <label class="form-label">Add a new user:</label>
+                        <form class="row g-3">
+                            <div class="col-auto">
+                                <label for="inputNewUser" class="visually-hidden">Email</label>
+                                <input type="text" class="form-control" id="inputNewUser" placeholder="Username">
+                            </div>
+                            <div class="col-auto">
+                                <label for="inputNewUserPassword" class="visually-hidden">Password</label>
+                                <input type="password" class="form-control" id="inputNewUserPassword"
+                                    placeholder="Password">
+                            </div>
+                            <div class="col-auto p-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="checkboxNewUserShopAccess"
+                                        checked>
+                                    <label class="form-check-label" for="checkboxNewUserShopAccess">Shop Access</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="checkboxNewUserBackupAccess">
+                                    <label class="form-check-label" for="checkboxNewUserBackupAccess">Backup
+                                        Access</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="checkboxNewUserAdminAccess">
+                                    <label class="form-check-label" for="checkboxNewUserAdminAccess">Admin
+                                        Access</label>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-primary mb-3"
+                                    onClick='submitNewUser()'>Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Delete User Modal -->
+                <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="deleteUserModalLabel">Delete user</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                ...
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="hr-settings">
+
+                <h2>Library</h2>
+
+                <h3 class="pt-3 pb-2">Paths</h3>
+                <p class="mb-2">Configure directories containing your games.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover caption-top" id="pathsTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Path</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-danger d-none" id="pathsAlert" role="alert"></div>
+
+                <!-- Library buttons -->
+                <div class="row g-3">
+                    <div class="col-auto">
+                        <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseNewPath" aria-expanded="false" aria-controls="collapseNewPath">
+                            Add library path
+                        </button>
+                    </div>
+
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-primary mb-3 scanBtn" onClick='scanLibrary()'>Scan
+                            library</button>
+                    </div>
+                </div>
+
+                <div class="collapse" id="collapseNewPath">
+                    <div class="card card-body">
+                        <label class="form-label">Add a new directory:</label>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <input type="text" class="form-control" id="libraryPathInput" placeholder="Path">
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" id="submitNewLibraryPathBtn" class="btn btn-primary mb-3"
+                                    onClick='submitNewLibraryPath()'>Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete User Modal -->
+                <div class="modal fade" id="deletePathModal" tabindex="-1" aria-labelledby="deletePathModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="deletePathModalLabel">Delete library path</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                ...
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="pt-4 pb-2">File watcher</h3>
+                <p>Monitor library paths for changes. Local paths use native OS events; network
+                    filesystems are polled at the interval below.</p>
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-auto">
+                        <div class="form-check form-switch mb-0">
+                            <input type="checkbox" class="form-check-input" id="watcherEnabledCheck">
+                            <label class="form-check-label" for="watcherEnabledCheck">Enable file watcher</label>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <label class="col-form-label" for="watcherIntervalInput">Polling interval</label>
+                    </div>
+                    <div class="col-auto">
+                        <div class="input-group">
+                            <input type="number" min="1" class="form-control" id="watcherIntervalInput" style="width:100px;">
+                            <span class="input-group-text">s</span>
+                        </div>
+                        <div id="watcherIntervalFeedback"></div>
+                    </div>
+                </div>
+                <button type="button" id="submitWatcherSettingsBtn" class="btn btn-primary mb-3"
+                    onClick='submitWatcherSettings()'>Save</button>
+
+                <h3 class="pt-4 pb-2">Management</h3>
+                <p>Configure automated library management.</p>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="deleteOlderUpdatesCheck">
+                    <label class="form-check-label" for="deleteOlderUpdatesCheck">Delete older updates</label>
+                    <div class="form-text">Deletes older update files when a newer version is available in the library.</div>
+                </div>
+
+                <h4 class="py-2">File compression</h4>
+                <p>Compress files to save disk space after they are added and organized.</p>
+                <div class="row">
+                    <div class="col-7">
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="compressFilesCheck">
+                            <label class="form-check-label" for="compressFilesCheck">Compress files</label>
+                            <div class="form-text">Compress files to <code>NSZ</code>/<code>XCZ</code> (<code>NSP</code>→<code>NSZ</code>,
+                                <code>XCI</code>→<code>XCZ</code>) after they are added and organized.
+                                Every compressed file is verified before the original is removed.</div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-auto">
+                                <label class="col-form-label" for="compressionLevelInput">Compression level</label>
+                            </div>
+                            <div class="col-auto">
+                                <input type="number" min="1" max="22" class="form-control" id="compressionLevelInput" style="width:100px;">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-text">zstandard level (<code>1</code>–<code>22</code>). Higher = smaller files but slower. Default: <code>18</code>.</div>
+                            </div>
+                        </div>
+                        <div class="accordion mb-3" id="compressionAdvancedAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#compressionAdvanced" aria-expanded="false" aria-controls="compressionAdvanced">
+                                        Advanced compression options
+                                    </button>
+                                </h2>
+                                <div id="compressionAdvanced" class="accordion-collapse collapse" data-bs-parent="#compressionAdvancedAccordion">
+                                    <div class="accordion-body">
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="compressLongDistanceCheck">
+                                            <label class="form-check-label" for="compressLongDistanceCheck">Long-distance mode</label>
+                                            <div class="form-text">Enables zstandard long-distance matching for a better ratio on large files, at higher memory use.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="compressModeSelect" class="form-label">Compression mode:</label>
+                                            <select class="form-select" id="compressModeSelect">
+                                                <option value="auto">Auto (solid for NSP, block for XCI)</option>
+                                                <option value="solid">Solid (best ratio, not randomly readable)</option>
+                                                <option value="block">Block (random read access, slightly larger)</option>
+                                            </select>
+                                            <div class="form-text">Block compression allows streaming/mounting without full decompression.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="compressBlockSizeInput" class="form-label">Block size exponent:</label>
+                                            <input type="number" class="form-control" min="14" max="32" id="compressBlockSizeInput">
+                                            <div class="form-text">Block size is <code>2^x</code> (<code>14</code>–<code>32</code>).
+                                                Default: <code>20</code> (<code>1 MB</code>). Only used in block mode.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="compressThreadsInput" class="form-label">Threads per file:</label>
+                                            <input type="number" class="form-control" min="0" max="64" id="compressThreadsInput">
+                                            <div class="form-text">Threads each compression task uses (<code>0</code> = automatic). Note: this multiplies with the
+                                                number of workers — high values across many workers can oversubscribe the CPU.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="py-2">File verification</h4>
+                <p>Check that files are original and intact. Requires valid console keys.</p>
+                <div class="row">
+                    <div class="col-7">
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="verifyFilesCheck">
+                            <label class="form-check-label" for="verifyFilesCheck">Verify files</label>
+                            <div class="form-text">Enable file verification: use <code>signature</code>
+                                verification to check origin, and <code>hash</code> verification to check integrity.</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="verificationDepth"
+                                       id="verificationDepthSignature" value="signature">
+                                <label class="form-check-label" for="verificationDepthSignature">Signature only</label>
+                                <div class="form-text">Checks that the container decrypts and that every
+                                    <code>NCA</code> header signature is Nintendo's.</div>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="verificationDepth"
+                                       id="verificationDepthHash" value="hash">
+                                <label class="form-check-label" for="verificationDepthHash">Full hash</label>
+                                <div class="form-text">Also hashes every byte of every <code>NCA</code> and
+                                    compares it against what the file claims, to ensure integrity.</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-warning d-none" id="verificationKeysAlert" role="alert">
+                            Verification is disabled: no valid console keys are loaded.
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="py-2">Organizer</h4>
+                <p>Keep your library organized.</p>
+                <div class="row">
+                    <div class="col-7">
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="organizerEnabledCheck">
+                            <label class="form-check-label" for="organizerEnabledCheck">Enable organizer</label>
+                            <div class="form-text">Enables automatic organization of identified files in the library, according to the templates below.</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="removeEmptyFoldersCheck">
+                            <label class="form-check-label" for="removeEmptyFoldersCheck">Remove empty folders</label>
+                            <div class="form-text">Removes empty folders after organizing files.</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="windowsCompatibleCheck">
+                            <label class="form-check-label" for="windowsCompatibleCheck">Windows compatible filenames</label>
+                            <div class="form-text">NS eShop Server enforces filename sanitization depending on the OS running it. Enabling this will sanitize filenames with
+                                Windows compatible characters and keep paths within the Windows length limit, this is needed when acessing libraries from Windows systems (e.g. SMB/NFS mount).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="pb-3 pt-2">Templates</h5>
+                <p>The final computed paths will be relative to the root path of the library, the file extension is added automatically.</p>
+                <div class="row">
+                    <div class="col-7">
+                        <div class="mb-3">
+                            <label for="baseTemplateInput" class="form-label">Base template:</label>
+                            <input type="text" class="form-control form-control-code" id="baseTemplateInput">
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateTemplateInput" class="form-label">Update template:</label>
+                            <input type="text" class="form-control form-control-code" id="updateTemplateInput">
+                        </div>
+                        <div class="mb-3">
+                            <label for="dlcTemplateInput" class="form-label">DLC template:</label>
+                            <input type="text" class="form-control form-control-code" id="dlcTemplateInput">
+                        </div>
+                        <div class="mb-3">
+                            <label for="multiTemplateInput" class="form-label">Multi-content template:</label>
+                            <input type="text" class="form-control form-control-code" id="multiTemplateInput">
+                        </div>
+                        <p class="text-break"><strong>Make sure the templates contain <code>[{appId}][v{appVersion}]</code> for Tinfoil to recognize the apps.</strong></p>
+                    </div>
+                    <div class="col-5">
+                        <div class="alert alert-dark">
+                            <p>Available attributes for all templates:</p>
+                            <ul>
+                                <li><code>{extension}</code>: File extension (e.g., <code>nsp</code>, <code>nsz</code>)</li>
+                                <li><code>{titleId}</code>: Title ID of the game</li>
+                                <li><code>{titleName}</code>: Name of the game title</li>
+                            </ul>
+                            <p>Available attributes for Base, Update, and DLC templates:</p>
+                            <ul>
+                                <li><code>{appId}</code>: Application ID</li>
+                                <li><code>{appVersion}</code>: Application version</li>
+                                <li><code>{patchLevel}</code>: Patch level</li>
+                                <li><code>{appName}</code>: Name of the application (title or DLC name)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="button" id="submitLibraryManagementSettingsBtn" class="btn btn-primary"
+                        onClick='submitLibraryManagementSettings()'>Submit</button>
+                </div>
+
+                <hr class="hr-settings">
+                <h2 class="pb-2">Titles</h2>
+                <p>Titles identification configuration.</p>
+                <div class="row mb-4">
+                    <div class="col">
+                        <label for="selectRegion" class="form-label">Library Region:</label>
+                        <select id="selectRegion" class="form-select" aria-label="Select library region">
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="selectLanguage" class="form-label">Library Language:</label>
+                        <select id="selectLanguage" class="form-select" aria-label="Select library language">
+                        </select>
+                    </div>
+                    <div id="selectRegionLanguageHelp" class="form-text">Region and Language used to get games
+                        informations.</div>
+                </div>
+
+                <div class="row mb-3">
+                    <!-- Console key upload form -->
+                    <div class="col-6">
+                        <label id="consoleKeysInputLabel" for="consoleKeysInput" class="form-label">Console Keys file:</label>
+                        <input class="form-control" type="file"
+                            accept=".keys,.txt" id="consoleKeysInput">
+                        <div id="consoleKeysFeedback">
+                        </div>
+                        <div id="consoleKeysHelp" class="form-text">Console keys are required to decrypt any Nintendo
+                            content, including
+                            backups. NS eShop Server uses this to identify files, regardless of the filename.
+                        </div>
+                    </div>
+
+                    <!-- Missing console keys -->
+                    <div class="col-6">
+                        <label for="keysAlert" class="form-label">Master key revisions:</label>
+                        <div id="keysAlert" class="alert alert-secondary py-2 mb-0">
+                            <p id="keysMissingLabel" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" id="submitTitlesSettingsBtn" class="btn btn-primary"
+                        onClick='submitTitlesSettings()'>Submit</button>
+                </div>
+                </form>
+                <hr class="hr-settings">
+
+                <h2 class="pb-2">Shop</h2>
+                <p>Shop configuration and customization.</p>
+                <!-- Shop URL -->
+                <div class="mb-3">
+                    <label for="shopHostInput" class="form-label">Shop URL:</label>
+                    <input class="form-control" id="shopHostInput" aria-describedby="shopHostHelp"
+                        placeholder="shop.domain.tld">
+                    <div id="shopHostHelp" class="form-text">Configure your shop URL to enable host verification.<br>
+                        Host verification from client requests will be enforced if the shop is accessed securely (with
+                        <code>https</code>), make sure your reverse proxy <strong>does NOT</strong> allow insecure
+                        connections (or upgrades them to use SSL) and correctly sets the <code>X-Forwarded-Proto</code>
+                        header.
+                    </div>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="publicShopCheck"
+                        aria-describedby="publicShopCheckHelp">
+                    <label class="form-check-label" for="publicShopCheck">Public shop</label>
+                    <div id="publicShopCheckHelp" class="form-text">If enabled, Shop access from clients does not
+                        require authentication.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="shopMotdTextArea" class="form-label">Message of the day:</label>
+                    <textarea class="form-control" id="shopMotdTextArea" rows="3"></textarea>
+                    <div id="shopMotdTextAreaHelp" class="form-text">Message presented in clients after
+                        successfully loading your shop.</div>
+                </div>
+
+                <h4 class="pt-3 pb-2">Clients</h4>
+                <h5 class="pb-2">Tinfoil</h5>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="tinfoilEnabledCheck"
+                        aria-describedby="tinfoilEnabledCheckHelp">
+                    <label class="form-check-label" for="tinfoilEnabledCheck">Enabled</label>
+                    <div id="tinfoilEnabledCheckHelp" class="form-text">Enable or disable Tinfoil client access to the shop.</div>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="tinfoilEncryptShopCheck"
+                        aria-describedby="tinfoilEncryptShopCheckHelp">
+                    <label class="form-check-label" for="tinfoilEncryptShopCheck">Encrypt shop</label>
+                    <div id="tinfoilEncryptShopCheckHelp" class="form-text">Serve encrypted and compressed shop, so that only Tinfoil clients
+                        can access the content. <strong>Strongly suggested to enable it for security</strong>.</div>
+                </div>
+
+                <h5 class="pb-2">Sphaira</h5>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="sphairaEnabledCheck"
+                        aria-describedby="sphairaEnabledCheckHelp">
+                    <label class="form-check-label" for="sphairaEnabledCheck">Enabled</label>
+                    <div id="sphairaEnabledCheckHelp" class="form-text">Enable or disable Sphaira client access to the shop.</div>
+                </div>
+
+                <h5 class="pb-2">CyberFoil</h5>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="cyberfoilEnabledCheck"
+                        aria-describedby="cyberfoilEnabledCheckHelp">
+                    <label class="form-check-label" for="cyberfoilEnabledCheck">Enabled</label>
+                    <div id="cyberfoilEnabledCheckHelp" class="form-text">Enable or disable CyberFoil client access to the shop.</div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" id="submitShopSettingsBtn" class="btn btn-primary"
+                        onClick='submitShopSettings()'>Submit</button>
+                </div>
+
+                
+                <hr class="hr-settings">
+                <h2 class="pb-2">Scheduler</h2>
+                <p>Configure the periodic jobs. Interval format is <code>number + unit</code>  (e.g., <code>2h</code>, <code>30m</code>, <code>1d</code>), with units: <code>s</code> (seconds), <code>m</code> (minutes), <code>h</code> (hours), <code>d</code> (days). Set to <code>0</code> to disable.</p>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="titledbUpdateIntervalInput" class="form-label">TitleDB update interval:</label>
+                        <input type="text" class="form-control" id="titledbUpdateIntervalInput" aria-describedby="titledbUpdateIntervalHelp" placeholder="2h">
+                        <div id="titledbUpdateIntervalFeedback"></div>
+                        <div id="titledbUpdateIntervalHelp" class="form-text">How often to automatically refresh TitleDB and re-process the library.</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" id="submitSchedulerSettingsBtn" class="btn btn-primary"
+                        onClick='submitSchedulerSettings()'>Submit</button>
+                </div>
+
+                <hr class="hr-settings">
+                <h2 class="pb-2">Workers</h2>
+                <p>Configure the number of task worker processes. More workers allow parallel processing of tasks (e.g., scanning, identifying files).</p>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="workerCountInput" class="form-label">Worker count:</label>
+                        <input type="number" class="form-control" id="workerCountInput" min="1" step="1">
+                        <div id="workerCountFeedback"></div>
+                        <div id="workerCountHelp" class="form-text">Number of worker processes.</div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="ioLimitInput" class="form-label">Max concurrent I/O tasks:</label>
+                        <input type="number" class="form-control" id="ioLimitInput" min="1" step="1">
+                        <div id="ioLimitFeedback"></div>
+                        <div id="ioLimitHelp" class="form-text">
+                            How many disk-heavy tasks (compression, decompression) run at once, independent of
+                            worker count. Compressing several multi-GB files in parallel from one disk makes the
+                            heads seek back and forth and can collapse throughput, so more is not always faster.
+                            Pick based on where your library lives:
+                            <ul class="mb-0">
+                                <li><strong>Network share or a single hard drive (HDD): 1</strong> — avoids seek
+                                    thrashing; the safe default.</li>
+                                <li><strong>SATA SSD: 2–3</strong> — no seek penalty, so limited by CPU.</li>
+                                <li><strong>NVMe with spare CPU cores: raise toward your core count</strong> — each
+                                    compression uses ~3–4 threads, so the CPU, not the disk, is the ceiling.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" id="submitWorkerSettingsBtn" class="btn btn-primary"
+                        onClick='submitWorkerSettings()'>Submit</button>
+                </div>
+
+            </div>
+{% endblock %}
+
+{% block panel_scripts %}
+<script>
+
+    settings_map = {
+        'library/path': 'libraryPathInput'
+    };
+
+
+    // allUsers = [];
+
+    function getInputVal(inputId) {
+        return $("#" + inputId).val();
+    };
+
+    function setInputVal(inputId, value) {
+        return $("#" + inputId).val(value);
+    };
+
+    function getCheckboxStatus(checkboxId) {
+        return $('#' + checkboxId).is(":checked")
+    }
+
+    // Scans one library, or every configured one when path is null.
+    const SCAN_MUTATION = `
+        mutation Scan($path: String) {
+            scanLibrary(path: $path) { id status }
+        }`;
+
+    async function scanLibrary(path = null) {
+        $('.scanBtn').prop('disabled', true);
+        try {
+            const r = await fetch('/api/graphql', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+                credentials: 'same-origin',
+                body: JSON.stringify({query: SCAN_MUTATION, variables: {path: path}}),
+            });
+            if (!r.ok) throw new Error(`GraphQL HTTP ${r.status}`);
+            const body = await r.json();
+            if (body.errors && body.errors.length) {
+                throw new Error('GraphQL errors: ' + JSON.stringify(body.errors));
+            }
+            console.log('Scan enqueued:', body.data.scanLibrary);
+            showPathsError(null);
+        } catch (e) {
+            console.error(e);
+            showPathsError('Could not start scan: ' + e.message);
+        } finally {
+            $('.scanBtn').prop('disabled', false);
+        }
+    }
+
+    // Shows API `errors` (or a plain message) above the paths table; falsy clears it.
+    function showPathsError(errors) {
+        const text = Array.isArray(errors) ? errors.map(e => e.error || e).join(' ') : errors;
+        $('#pathsAlert').text(text || '').toggleClass('d-none', !text);
+    }
+
+    function fillLibraryTable() {
+        $('#pathsTable tbody').empty();
+
+        $.getJSON("/api/settings/library/paths", function (result) {
+
+            if (!result['success']) {
+                if (result['status_code'] == '302') {
+                    window.location.href = result['location']
+                    return
+                }
+            }
+            paths = result.paths;
+            if (paths === null || !paths.length) {
+                $('#pathsTable tbody').append(
+                    '<tr><td>-</td><td>-</td><td>');
+            } else {
+                paths.forEach(path => {
+                    // The path is set with .text()/.attr(): concatenating it into markup, or into an
+                    // inline handler, makes the browser eat backslashes in Windows paths (issue #297).
+                    const scanBtn = $('<button type="button" class="btn btn-outline-info btn-sm scanBtn"><i class="bi bi-arrow-clockwise"></i></button>').attr('data-bs-path', path);
+                    const deleteBtn = $('<button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deletePathModal"><i class="bi bi-x-circle"></i></button>').attr('data-bs-path', path);
+                    $('#pathsTable tbody').append(
+                        $('<tr>').append($('<td>').text(path), $('<td>').append(scanBtn, ' ', deleteBtn)));
+                })
+            }
+            const watcher = result.watcher || { enabled: true, polling_interval: 60 };
+            $('#watcherEnabledCheck').prop('checked', watcher.enabled);
+            $('#watcherIntervalInput').val(watcher.polling_interval);
+        });
+
+    }
+
+    function submitWatcherSettings() {
+        $('#submitWatcherSettingsBtn').prop('disabled', true);
+        data = {
+            enabled: getCheckboxStatus("watcherEnabledCheck"),
+            polling_interval: parseInt($('#watcherIntervalInput').val(), 10)
+        }
+        $.ajax({
+            url: "/api/settings/library/watcher",
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function (result) {
+                if (!result['success']) {
+                    if (result['errors']) {
+                        result['errors'].forEach(error => {
+                            $('#watcherIntervalFeedback').text(error['error']);
+                            $('#watcherIntervalFeedback').addClass('invalid-feedback d-block');
+                            $("#watcherIntervalInput").removeClass('is-valid').addClass('is-invalid');
+                        });
+                    }
+                } else {
+                    $('#watcherIntervalFeedback').text('').removeClass('invalid-feedback d-block');
+                    $("#watcherIntervalInput").removeClass('is-invalid').addClass('is-valid');
+                }
+                $('#submitWatcherSettingsBtn').prop('disabled', false);
+            }
+        });
+    }
+
+    function fillUserTable() {
+        $('#userTable tbody').empty();
+        $.getJSON("/api/users", function (result) {
+            if (!result['success']) {
+                if (result['status_code'] == '302') {
+                    window.location.href = result['location']
+                    return
+                }
+            }
+            allUsers = result;
+            allUsernames = [];
+            if (!result.length) {
+                $('#userTable tbody').append(
+                    '<tr><td>-</td><td>-</td><td>-</td></tr>');
+            }
+            result.forEach(user => {
+                allUsernames.push(user['user']);
+                base_input = '<input class="form-check-input" type="checkbox" onclick="return false" checked>';
+                shop_input = base_input;
+                backup_input = base_input;
+                admin_input = base_input;
+                if (!user['shop_access']) {
+                    shop_input = shop_input.replace(' checked', '');
+                }
+                if (!user['backup_access']) {
+                    backup_input = backup_input.replace(' checked', '');
+                }
+                if (!user['admin_access']) {
+                    admin_input = shop_input.replace(' checked', '');
+                }
+                $('#userTable tbody').append(
+                    '<tr><td>' + user['user'] + '</td><td>'
+                    + `
+                        <div class="form-check form-check-inline">`
+                    + shop_input + `
+                            <label class="form-check-label">Shop</label>
+                        </div>
+                        <div class="form-check form-check-inline">`
+                    + backup_input + `
+                            <label class="form-check-label">Backup</label>
+                        </div>
+                        <div class="form-check form-check-inline">`
+                    + admin_input + `
+                            <label class="form-check-label">Admin</label>
+                        </div>`
+                    + '</td><td>' +
+                    '<button type="button" class="btn btn-outline-info btn-sm" disabled=""><i class="bi bi-pencil-square"></i></button> ' +
+                    '<button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-bs-id="' + user['id'] + '" data-bs-user="' + user['user'] + '"\'><i class="bi bi-x-circle"></i></button>' +
+                    '</td></tr>');
+            });
+        })
+
+    }
+
+    function updateKeysElements(titlesSettings) {
+        // Verification cannot run without keys: nstools needs them to open a container.
+        const validKeys = Boolean(titlesSettings['valid_keys']);
+        $('#verifyFilesCheck, #verificationDepthSignature, #verificationDepthHash').prop('disabled', !validKeys);
+        $('#verificationKeysAlert').toggleClass('d-none', validKeys);
+
+        // Keys alert
+        if (titlesSettings['valid_keys']) {
+            $('#consoleKeysFeedback').text("Keys are valid!");
+            $('#consoleKeysFeedback').removeClass('invalid-feedback');
+            $('#consoleKeysFeedback').addClass('valid-feedback d-block');
+            $('#missingKeysAlert').removeClass('d-block');
+            $('#missingKeysAlert').addClass('d-none');
+        } else {
+            $('#consoleKeysFeedback').removeClass('valid-feedback');
+            $('#consoleKeysFeedback').addClass('invalid-feedback d-block');
+            $('#missingKeysAlert').removeClass('d-none');
+            $("#missingKeysAlert").addClass('d-block');
+            if (titlesSettings['valid_keys'] === null) {
+                $('#consoleKeysFeedback').text("Missing keys file! Use the button above to upload a new file.");
+            } else {
+                $('#consoleKeysFeedback').text("Invalid keys file! At least one master key is incorrect. Use the button above to upload a new file.");
+            }
+        }
+
+        // Missing and invalid master key revisions
+        if (titlesSettings['valid_keys'] === null) {
+            $('#keysAlert').css("border-color", "var(--bs-danger-border-subtle)");
+            $("#keysMissingLabel").text("Missing console keys file.");
+        } else if ((titlesSettings['missing_keys'] && titlesSettings['missing_keys'].length > 0) || (titlesSettings['corrupt_keys'] && titlesSettings['corrupt_keys'].length > 0)) {
+            $('#keysAlert').css("border-color", "var(--bs-warning-border-subtle)");
+            $("#keysMissingLabel").text("Missing/invalid master key revisions:");
+            $("#keysMissingLabel").next('ul').remove(); // Clear existing ul if any
+            var ul = $('<ul class="mb-0">');
+            if (titlesSettings['corrupt_keys'] && titlesSettings['corrupt_keys'].length > 0) {
+                $.each(titlesSettings['corrupt_keys'], function(index, key) {
+                    ul.append($('<li>').html('<code>' + key + '</code> is invalid'));
+                });
+            }
+            if (titlesSettings['missing_keys'] && titlesSettings['missing_keys'].length > 0) {
+                $.each(titlesSettings['missing_keys'], function(index, key) {
+                    ul.append($('<li>').html('<code>' + key + '</code> is missing'));
+                });
+            }
+            $("#keysMissingLabel").after(ul);
+        } else {
+            $('#keysAlert').css("border-color", "var(--bs-form-valid-border-color)");
+            $("#keysMissingLabel").text("All master key revisions are present and valid.");
+        }
+    }
+
+    // Row buttons carry their path in data-bs-path, read back as a string rather than
+    // re-parsed as markup or JS.
+    $('#pathsTable').on('click', '.scanBtn', function () {
+        scanLibrary($(this).attr('data-bs-path'))
+    })
+
+    const deletePathModal = $('#deletePathModal')
+    if (deletePathModal) {
+        deletePathModal.on('show.bs.modal', event => {
+            const path = event.relatedTarget.getAttribute('data-bs-path')
+            deletePathModal.data('path', path)
+            deletePathModal.find('.modal-body').text("Delete path " + path + " ?")
+        })
+        deletePathModal.find('.btn-danger').on('click', () => deleteLibraryPath(deletePathModal.data('path')))
+    }
+
+    const deleteUserModal = $('#deleteUserModal')
+    if (deleteUserModal) {
+        deleteUserModal.on('show.bs.modal', event => {
+            // Button that triggered the modal
+            const button = event.relatedTarget
+            // Extract info from data-bs-* attributes
+            const user = button.getAttribute('data-bs-user')
+            const id = button.getAttribute('data-bs-id')
+            // If necessary, you could initiate an Ajax request here
+            // and then do the updating in a callback.
+
+            // Update the modal's content.
+            // const modalTitle = deleteUserModal.querySelector('.modal-title')
+            const modalBody = deleteUserModal.find('.modal-body')
+            const deleteBtn = deleteUserModal.find('.btn-danger')
+
+
+            deleteBtn.attr('onClick', 'deleteUser(' + id + ');');
+
+            // modalTitle.textContent = `New message to ${recipient}`
+            modalBody.text("Delete user " + user + " ?")
+        })
+    }
+
+    function deleteUser(userId) {
+        data = {
+            user_id: userId
+        }
+        $.ajax({
+            url: "/api/user",
+            type: 'DELETE',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function (result) {
+                if (result['success']) {
+                    fillUserTable();
+                }
+            }
+        });
+    }
+
+    function deleteLibraryPath(path) {
+        data = {
+            path: path
+        }
+        $.ajax({
+            url: "/api/settings/library/paths",
+            type: 'DELETE',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function (result) {
+                showPathsError(result['success'] ? null : result['errors']);
+                if (result['success']) {
+                    fillLibraryTable();
+                }
+            },
+            error: function (xhr) {
+                showPathsError('Could not delete path: HTTP ' + xhr.status + '.');
+            }
+        });
+    }
+
+    $('#checkboxNewUserAdminAccess').change(function () {
+        if (this.checked != false) {
+            $('#checkboxNewUserShopAccess').prop('checked', true).attr("disabled", true);
+            $('#checkboxNewUserBackupAccess').prop('checked', true).attr("disabled", true);
+
+        } else {
+            $('#checkboxNewUserShopAccess').attr("disabled", false);
+            $('#checkboxNewUserBackupAccess').attr("disabled", false);
+
+        }
+    });
+
+    function validatePassword(password) {
+        if (!password) {
+            return {
+                isValid: false,
+                message: "Password cannot be empty"
+            };
+        }
+        
+        // Check for control characters (null, line breaks, etc.)
+        const controlChars = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
+        if (controlChars.test(password)) {
+            return {
+                isValid: false,
+                message: "Password contains invalid control characters"
+            };
+        }
+        
+        // Also check for tab, newline, and carriage return explicitly
+        if (password.includes('\t') || password.includes('\n') || password.includes('\r')) {
+            return {
+                isValid: false,
+                message: "Password contains invalid control characters"
+            };
+        }
+        
+        // Check for Tinfoil forbidden characters
+        const tinfoilForbidden = /[@&/?#=]/;
+        if (tinfoilForbidden.test(password)) {
+            return {
+                isValid: false,
+                message: "Password contains invalid characters. Please avoid: @ & / ? # ="
+            };
+        }
+        
+        // Check for UTF-8 encoding validity
+        try {
+            // Try to encode as UTF-8
+            new TextEncoder().encode(password);
+        } catch (e) {
+            return {
+                isValid: false,
+                message: "Password contains invalid UTF-8 characters"
+            };
+        }
+        
+        return { isValid: true, message: "" };
+    }
+
+    function validateUsername(username) {
+        if (!username) {
+            return {
+                isValid: false,
+                message: "Username cannot be empty"
+            };
+        }
+        
+        // Check for colons (not allowed in Basic Auth usernames)
+        if (username.includes(':')) {
+            return {
+                isValid: false,
+                message: "Username cannot contain colons (:)"
+            };
+        }
+        
+        // Check for control characters (null, line breaks, etc.)
+        const controlChars = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
+        if (controlChars.test(username)) {
+            return {
+                isValid: false,
+                message: "Username contains invalid control characters"
+            };
+        }
+        
+        // Also check for tab, newline, and carriage return explicitly
+        if (username.includes('\t') || username.includes('\n') || username.includes('\r')) {
+            return {
+                isValid: false,
+                message: "Username contains invalid control characters"
+            };
+        }
+        
+        // Check for UTF-8 encoding validity
+        try {
+            // Try to encode as UTF-8
+            new TextEncoder().encode(username);
+        } catch (e) {
+            return {
+                isValid: false,
+                message: "Username contains invalid UTF-8 characters"
+            };
+        }
+        
+        return { isValid: true, message: "" };
+    }
+
+    function showPasswordError(message) {
+        $('#inputNewUserPassword').addClass('is-invalid');
+        let errorDiv = $('#inputNewUserPassword').siblings('.invalid-feedback');
+        if (errorDiv.length === 0) {
+            errorDiv = $('<div class="invalid-feedback"></div>');
+            $('#inputNewUserPassword').after(errorDiv);
+        }
+        errorDiv.text(message);
+    }
+
+    function clearPasswordError() {
+        $('#inputNewUserPassword').removeClass('is-invalid');
+        $('#inputNewUserPassword').siblings('.invalid-feedback').remove();
+    }
+
+    function showUsernameError(message) {
+        $('#inputNewUser').addClass('is-invalid');
+        let errorDiv = $('#inputNewUser').siblings('.invalid-feedback');
+        if (errorDiv.length === 0) {
+            errorDiv = $('<div class="invalid-feedback"></div>');
+            $('#inputNewUser').after(errorDiv);
+        }
+        errorDiv.text(message);
+    }
+
+    function clearUsernameError() {
+        $('#inputNewUser').removeClass('is-invalid');
+        $('#inputNewUser').siblings('.invalid-feedback').remove();
+    }
+
+    function submitNewUser() {
+        formOk = true;
+        user = getInputVal("inputNewUser")
+        password = getInputVal("inputNewUserPassword")
+        shop_access = getCheckboxStatus("checkboxNewUserShopAccess")
+        backup_access = getCheckboxStatus("checkboxNewUserBackupAccess")
+        admin_access = getCheckboxStatus("checkboxNewUserAdminAccess")
+
+        // Validate username
+        const usernameValidation = validateUsername(user);
+        if (!usernameValidation.isValid) {
+            showUsernameError(usernameValidation.message);
+            formOk = false;
+        } else if (allUsernames.includes(user)) {
+            showUsernameError('User already exists');
+            formOk = false;
+        } else {
+            clearUsernameError();
+        }
+
+        // Validate password
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            showPasswordError(passwordValidation.message);
+            formOk = false;
+        } else {
+            clearPasswordError();
+        }
+
+
+        if (formOk) {
+            data = {
+                user: user,
+                password: password,
+                shop_access: shop_access,
+                backup_access: backup_access,
+                admin_access: admin_access,
+            }
+
+            $.ajax({
+                url: "/api/user/signup",
+                type: 'POST',
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                success: function (result) {
+                    if (result['success']) {
+                        if (result['status_code'] == '302') {
+                            window.location.href = result['location']
+                            return
+                        }
+                        console.log('Signup Success!');
+                        setInputVal("inputNewUser", "")
+                        setInputVal("inputNewUserPassword", "")
+                        fillUserTable();
+                    } else {
+                        // Handle backend validation errors
+                        if (result['error']) {
+                            $('#inputNewUserPassword').addClass('is-invalid');
+                            let errorDiv = $('#inputNewUserPassword').siblings('.invalid-feedback');
+                            if (errorDiv.length === 0) {
+                                errorDiv = $('<div class="invalid-feedback"></div>');
+                                $('#inputNewUserPassword').after(errorDiv);
+                            }
+                            errorDiv.text(result['error']);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error creating user:', error);
+                    $('#inputNewUserPassword').addClass('is-invalid');
+                    let errorDiv = $('#inputNewUserPassword').siblings('.invalid-feedback');
+                    if (errorDiv.length === 0) {
+                        errorDiv = $('<div class="invalid-feedback"></div>');
+                        $('#inputNewUserPassword').after(errorDiv);
+                    }
+                    errorDiv.text('Error creating user. Please try again.');
+                }
+            });
+        }
+    }
+
+    function submitNewLibraryPath() {
+        $('#submitNewLibraryPathBtn').prop('disabled', true);
+        path = getInputVal("libraryPathInput").trim();
+        data = {
+            path: path
+        }
+
+        $.ajax({
+            url: "/api/settings/library/paths",
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function (result) {
+                if (result['success']) {
+                    if (result['status_code'] == '302') {
+                        window.location.href = result['location']
+                        return
+                    }
+                    console.log('Sucessfully added path ' + path);
+                    setInputVal("libraryPathInput", "")
+                    showPathsError(null);
+                    fillLibraryTable();
+                } else {
+                    showPathsError(result['errors']);
+                }
+                $('#submitNewLibraryPathBtn').prop('disabled', false);
+            },
+            error: function (xhr) {
+                showPathsError('Could not add path: HTTP ' + xhr.status + '.');
+                $('#submitNewLibraryPathBtn').prop('disabled', false);
+            }
+        });
+    }
+
+    function submitTitlesSettings() {
+        $('#submitTitlesSettingsBtn').prop('disabled', true);
+        data = {
+            region: getInputVal("selectRegion"),
+            language: getInputVal("selectLanguage"),
+        }
+        file = $('#consoleKeysInput').prop('files')[0];
+
+        if (file != undefined) {
+            formData = new FormData();
+            formData.append("file", file);
+            $.ajax({
+                url: "/api/upload",
+                type: 'POST',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                    if (result['success']) {
+                        updateKeysElements(result['data']);
+                        $('#consoleKeysInput').val('');
+                    } else {
+                        errors = result['errors'].join(';')
+                        $('#consoleKeysFeedback').text("Failed to upload keys file: " + errors);
+                        $('#consoleKeysFeedback').addClass('invalid-feedback d-block');
+                    }
+                }
+            });
+        }
+
+        $.ajax({
+            url: "/api/settings/titles",
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function (result) {
+                if (!result['success']) {
+                    console.log('Not Success!');
+                    result['errors'].forEach(error => {
+                        path = error['path'];
+                        formId = settings_map[path];
+                        form = $('#' + formId);
+                        form.addClass('is-invalid');
+                        formTextElement = form.attr('aria-describedby');
+                        $("#" + formTextElement).addClass('invalid-feedback');
+                        $("#" + formTextElement).text(error['error']);
+                    });
+                }
+                $('#consoleKeysInput').val('');
+                $('#submitTitlesSettingsBtn').prop('disabled', false);
+            }
+        });
+    }
+
+    function submitShopSettings() {
+        $('#submitShopSettingsBtn').prop('disabled', true);
+        data = {
+            host: $('#shopHostInput').val(),
+            public: getCheckboxStatus("publicShopCheck"),
+            motd: $('#shopMotdTextArea').val(),
+            clients: {
+                cyberfoil: {
+                    enabled: getCheckboxStatus("cyberfoilEnabledCheck"),
+                },
+                tinfoil: {
+                    enabled: getCheckboxStatus("tinfoilEnabledCheck"),
+                    encrypt: getCheckboxStatus("tinfoilEncryptShopCheck"),
+                },
+                sphaira: {
+                    enabled: getCheckboxStatus("sphairaEnabledCheck"),
+                }
+            }
+        }
+
+        $.ajax({
+            url: "/api/settings/shop",
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function (result) {
+                if (!result['success']) {
+                    console.log('Not Success!');
+                    result['errors'].forEach(error => {
+                        path = error['path'];
+                        formId = settings_map[path];
+                        form = $('#' + formId);
+                        form.addClass('is-invalid');
+                        formTextElement = form.attr('aria-describedby');
+                        $("#" + formTextElement).addClass('invalid-feedback');
+                        $("#" + formTextElement).text(error['error']);
+                    });
+                }
+                $('#submitShopSettingsBtn').prop('disabled', false);
+            }
+        });
+    }
+
+    function submitLibraryManagementSettings() {
+        $('#submitLibraryManagementSettingsBtn').prop('disabled', true);
+        data = {
+            compression: {
+                enabled: getCheckboxStatus("compressFilesCheck"),
+                level: parseInt(getInputVal("compressionLevelInput")),
+                long_distance: getCheckboxStatus("compressLongDistanceCheck"),
+                mode: getInputVal("compressModeSelect"),
+                block_size_exponent: parseInt(getInputVal("compressBlockSizeInput")),
+                threads: parseInt(getInputVal("compressThreadsInput"))
+            },
+            verification: {
+                enabled: getCheckboxStatus("verifyFilesCheck"),
+                depth: $("input[name='verificationDepth']:checked").val() || "signature"
+            },
+            delete_older_updates: getCheckboxStatus("deleteOlderUpdatesCheck"),
+            organizer: {
+                enabled: getCheckboxStatus("organizerEnabledCheck"),
+                remove_empty_folders: getCheckboxStatus("removeEmptyFoldersCheck"),
+                windows_compatible: getCheckboxStatus("windowsCompatibleCheck"),
+                templates: {
+                    base: getInputVal("baseTemplateInput"),
+                    update: getInputVal("updateTemplateInput"),
+                    dlc: getInputVal("dlcTemplateInput"),
+                    multi: getInputVal("multiTemplateInput")
+                }
+            }
+        }
+
+        $.ajax({
+            url: "/api/settings/library/management",
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function (result) {
+                if (!result['success']) {
+                    console.log('Not Success!');
+                }
+                $('#submitLibraryManagementSettingsBtn').prop('disabled', false);
+            }
+        });
+    }
+
+    function submitSchedulerSettings() {
+        $('#submitSchedulerSettingsBtn').prop('disabled', true);
+        data = {
+            titledb_update_interval: getInputVal("titledbUpdateIntervalInput").trim()
+        }
+
+        $.ajax({
+            url: "/api/settings/scheduler",
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function (result) {
+                if (!result['success']) {
+                    console.log('Not Success!');
+                    if (result['errors']) {
+                        result['errors'].forEach(error => {
+                            if (error['path'] === 'scheduler/titledb_update_interval') {
+                                $('#titledbUpdateIntervalFeedback').text(error['error']);
+                                $('#titledbUpdateIntervalFeedback').addClass('invalid-feedback d-block');
+                                $("#titledbUpdateIntervalInput").removeClass('is-valid');
+                                $("#titledbUpdateIntervalInput").addClass('is-invalid');
+                            }
+                            console.log('Path:', error['path']);
+                            console.log('Error:', error['error']);
+                        });
+                    }
+                } else {
+                    console.log('Scheduler settings updated successfully!');
+                    $('#titledbUpdateIntervalFeedback').text('');
+                    $('#titledbUpdateIntervalFeedback').removeClass('invalid-feedback d-block');
+                    $("#titledbUpdateIntervalInput").removeClass('is-invalid');
+                    $("#titledbUpdateIntervalInput").addClass('is-valid');
+                }
+                $('#submitSchedulerSettingsBtn').prop('disabled', false);
+            }
+        });
+    }
+
+    function submitWorkerSettings() {
+        $('#submitWorkerSettingsBtn').prop('disabled', true);
+        data = {
+            count: parseInt($('#workerCountInput').val()),
+            group_limits: { io: parseInt($('#ioLimitInput').val()) }
+        }
+
+        $.ajax({
+            url: "/api/settings/worker",
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function (result) {
+                if (!result['success']) {
+                    if (result['errors']) {
+                        result['errors'].forEach(error => {
+                            if (error['path'] === 'worker/count') {
+                                $('#workerCountFeedback').text(error['error']);
+                                $('#workerCountFeedback').addClass('invalid-feedback d-block');
+                                $("#workerCountInput").removeClass('is-valid');
+                                $("#workerCountInput").addClass('is-invalid');
+                            } else if (error['path'] === 'worker/group_limits') {
+                                $('#ioLimitFeedback').text(error['error']);
+                                $('#ioLimitFeedback').addClass('invalid-feedback d-block');
+                                $("#ioLimitInput").removeClass('is-valid');
+                                $("#ioLimitInput").addClass('is-invalid');
+                            }
+                        });
+                    }
+                } else {
+                    $('#workerCountFeedback').text('');
+                    $('#workerCountFeedback').removeClass('invalid-feedback d-block');
+                    $("#workerCountInput").removeClass('is-invalid');
+                    $("#workerCountInput").addClass('is-valid');
+                    $('#ioLimitFeedback').text('');
+                    $('#ioLimitFeedback').removeClass('invalid-feedback d-block');
+                    $("#ioLimitInput").removeClass('is-invalid');
+                    $("#ioLimitInput").addClass('is-valid');
+                }
+                $('#submitWorkerSettingsBtn').prop('disabled', false);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        fillUserTable();
+        fillLibraryTable();
+
+        // Add real-time password validation
+        $('#inputNewUserPassword').on('input', function() {
+            const password = $(this).val();
+            const validation = validatePassword(password);
+            if (!validation.isValid) {
+                showPasswordError(validation.message);
+            } else {
+                clearPasswordError();
+            }
+        });
+
+        // Add real-time username validation
+        $('#inputNewUser').on('input', function() {
+            const username = $(this).val();
+            const validation = validateUsername(username);
+            if (!validation.isValid) {
+                showUsernameError(validation.message);
+            } else if (allUsernames.includes(username)) {
+                showUsernameError('User already exists');
+            } else {
+                clearUsernameError();
+            }
+        });
+
+        $.getJSON("/api/settings", function (result) {
+            languages = {{ languages_from_titledb | tojson | safe }};
+            Object.keys(languages).forEach(function (key) {
+                $('#selectRegion').append(`<option value="${key}">${key}</option>`);
+            });
+
+            $('#selectRegion').on('change', function () {
+                $('#selectLanguage').empty()
+                region = $(this).find(":selected").val();
+                availableLanguages = languages[region];
+                availableLanguages.forEach(function (key) {
+                    $('#selectLanguage').append(`<option value="${key}">${key}</option>`);
+                });
+            });
+
+            // Library settings
+            librarySettings = result['library'];
+            // Populate library management settings
+            const compression = librarySettings['management']['compression'];
+            $("#compressFilesCheck").prop("checked", compression['enabled']);
+            setInputVal("compressionLevelInput", compression['level']);
+            $("#compressLongDistanceCheck").prop("checked", compression['long_distance']);
+            setInputVal("compressModeSelect", compression['mode']);
+            setInputVal("compressBlockSizeInput", compression['block_size_exponent']);
+            setInputVal("compressThreadsInput", compression['threads']);
+            const verification = librarySettings['management']['verification'];
+            $("#verifyFilesCheck").prop("checked", verification['enabled']);
+            $("input[name='verificationDepth'][value='" + verification['depth'] + "']").prop("checked", true);
+            $("#deleteOlderUpdatesCheck").prop("checked", librarySettings['management']['delete_older_updates']);
+            $("#organizerEnabledCheck").prop("checked", librarySettings['management']['organizer']['enabled']);
+            $("#removeEmptyFoldersCheck").prop("checked", librarySettings['management']['organizer']['remove_empty_folders']);
+            $("#windowsCompatibleCheck").prop("checked", librarySettings['management']['organizer']['windows_compatible']);
+            setInputVal("baseTemplateInput", librarySettings['management']['organizer']['templates']['base']);
+            setInputVal("updateTemplateInput", librarySettings['management']['organizer']['templates']['update']);
+            setInputVal("dlcTemplateInput", librarySettings['management']['organizer']['templates']['dlc']);
+            setInputVal("multiTemplateInput", librarySettings['management']['organizer']['templates']['multi']);
+
+            // Titles settings
+            titlesSettings = result['titles'];
+            updateKeysElements(titlesSettings);
+
+            // Fill region and language
+            setInputVal("selectRegion", titlesSettings['region']);
+            $('#selectRegion').trigger('change');
+            setInputVal("selectLanguage", titlesSettings['language']);
+
+            // Scheduler settings
+            schedulerSettings = result['scheduler'];
+            if (schedulerSettings && schedulerSettings['titledb_update_interval'] !== undefined) {
+                setInputVal("titledbUpdateIntervalInput", schedulerSettings['titledb_update_interval']);
+            }
+
+            // Worker settings
+            workerSettings = result['worker'];
+            if (workerSettings && workerSettings['count'] !== undefined) {
+                $('#workerCountInput').val(workerSettings['count']);
+            }
+            if (workerSettings && workerSettings['group_limits'] && workerSettings['group_limits']['io'] !== undefined) {
+                $('#ioLimitInput').val(workerSettings['group_limits']['io']);
+            }
+
+            // Shop settings
+            shopSettings = result['shop'];
+            setInputVal("shopHostInput", shopSettings['host']);
+            $("#publicShopCheck").prop("checked", shopSettings['public']);
+            setInputVal("shopMotdTextArea", shopSettings['motd']);
+
+            // Check for missing shop host
+            if (!shopSettings['host']) {
+                $("#missingShopHostAlert").css('display', '');
+            }
+            
+            // Client-specific settings
+            if (shopSettings['clients']) {
+                if (shopSettings['clients']['tinfoil']) {
+                    tinfoilSettings = shopSettings['clients']['tinfoil'];
+                    $("#tinfoilEnabledCheck").prop("checked", tinfoilSettings['enabled']);
+                    $("#tinfoilEncryptShopCheck").prop("checked", tinfoilSettings['encrypt']);
+                }
+                if (shopSettings['clients']['sphaira']) {
+                    sphairaSettings = shopSettings['clients']['sphaira'];
+                    $("#sphairaEnabledCheck").prop("checked", sphairaSettings['enabled']);
+                }
+                if (shopSettings['clients']['cyberfoil']) {
+                    cyberfoilSettings = shopSettings['clients']['cyberfoil'];
+                    $("#cyberfoilEnabledCheck").prop("checked", cyberfoilSettings['enabled']);
+                }
+            }
+        });
+
+    });
+    {% if admin_account_created == false %}
+    $('#checkboxNewUserAdminAccess').prop('checked', true).attr("disabled", true);
+    $('#checkboxNewUserShopAccess').prop('checked', true).attr("disabled", true);
+    $('#checkboxNewUserBackupAccess').prop('checked', true).attr("disabled", true);
+    {% endif %}
+</script>
+
+{% endblock %}
