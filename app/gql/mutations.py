@@ -16,6 +16,8 @@ Two conventions differ from the query side, both on purpose:
 Every resolver delegates; no business logic lives in this module.
 """
 from typing import Optional
+from urllib.parse import urlsplit
+from urllib.parse import urlsplit
 
 import strawberry
 from strawberry.types import Info
@@ -223,6 +225,50 @@ class Mutation:
         if not ok:
             raise MutationFailed(err)
         tasks_mod.enqueue_task('process_library')
+        return resolve_title(str(title_id), info.context, info)
+
+    @described_mutation
+    def set_title_trailer(
+        self, info: Info,
+        title_id: Annotated[strawberry.ID, strawberry.argument(
+            description="The 16-hex-digit title id to update.")],
+        trailer_url: Annotated[Optional[str], strawberry.argument(
+            description="HTTPS URL of an official trailer. Empty clears this field.")],
+    ) -> Optional[Title]:
+        """Set only the official trailer URL, preserving other custom metadata."""
+        import titledb
+        _require_admin(info.context)
+        normalized_url = (trailer_url or '').strip()
+        if normalized_url:
+            parsed = urlsplit(normalized_url)
+            if parsed.scheme != 'https' or not parsed.hostname:
+                raise MutationFailed("Trailer URL must be a valid HTTPS URL.")
+        ok, err = titledb.store.set_override_field(
+            str(title_id), 'trailerUrl', normalized_url or None)
+        if not ok:
+            raise MutationFailed(err)
+        return resolve_title(str(title_id), info.context, info)
+
+    @described_mutation
+    def set_title_trailer(
+        self, info: Info,
+        title_id: Annotated[strawberry.ID, strawberry.argument(
+            description="The 16-hex-digit title id to update.")],
+        trailer_url: Annotated[Optional[str], strawberry.argument(
+            description="HTTPS URL of an official trailer. Empty clears this field.")],
+    ) -> Optional[Title]:
+        """Set only the official trailer URL, preserving the title's other custom metadata."""
+        import titledb
+        _require_admin(info.context)
+        normalized_url = (trailer_url or '').strip()
+        if normalized_url:
+            parsed = urlsplit(normalized_url)
+            if parsed.scheme != 'https' or not parsed.hostname:
+                raise MutationFailed("Trailer URL must be a valid HTTPS URL.")
+        ok, err = titledb.store.set_override_field(
+            str(title_id), 'trailerUrl', normalized_url or None)
+        if not ok:
+            raise MutationFailed(err)
         return resolve_title(str(title_id), info.context, info)
 
     @described_mutation

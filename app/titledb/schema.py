@@ -59,6 +59,7 @@ def metadata_columns():
         _col('language', 'language'),
         _col('rights_id', 'rightsId'),
         _col('screenshots', 'screenshots', json=True),
+        _col('trailer_url', 'trailerUrl'),
         _col('size', 'size'),
         _col('version', 'version'),
         _col('nca_key', 'key'),

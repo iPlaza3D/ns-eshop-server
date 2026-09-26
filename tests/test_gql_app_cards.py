@@ -194,6 +194,35 @@ def test_base_cards_carry_the_titles_update_history(library):
     assert base["title"]["ownership"] == {"haveBase": True, "upToDate": False, "complete": True}
 
 
+def test_title_detail_query_includes_store_metadata_and_owned_dlcs(library):
+    query = """
+    query TitleDetails($titleId: ID!) {
+        title(titleId: $titleId) {
+            titleId name publisher description frontBoxArt screenshots
+            ownership { haveBase upToDate complete }
+            availableVersions { version releaseDate }
+            availableDlc { appId version titledb { name iconUrl } }
+            apps(appType: [DLC]) { appId owned }
+        }
+    }
+    """
+    response = library.client.get("/api/graphql", query_string={
+        "query": query, "variables": json.dumps({"titleId": ALPHA})})
+
+    assert response.status_code == 200, response.get_data(as_text=True)
+    body = response.get_json()
+    assert "errors" not in body, body["errors"]
+    detail = body["data"]["title"]
+    assert detail["titleId"] == ALPHA
+    assert detail["name"] == "Alpha Game"
+    assert detail["publisher"] == "Nintendo"
+    assert detail["ownership"] == {"haveBase": True, "upToDate": False, "complete": True}
+    assert {app["appId"]: app["owned"] for app in detail["apps"]} == {
+        ALPHA_DLC_1: False,
+        ALPHA_DLC_2: True,
+    }
+
+
 def test_dlc_cards_carry_their_own_versions_and_their_parent(library):
     dlc = next(i for i in cards(library)["items"] if i["appId"] == ALPHA_DLC_1)
 

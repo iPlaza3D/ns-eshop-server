@@ -331,6 +331,19 @@ def test_overrides_survive_a_rebuild(install, case, overrides, expected, sources
     assert _sources_of(install, TITLE_ID) == sources
 
 
+def test_trailer_url_override_survives_a_rebuild(install):
+    init_db(install.app)
+    _import(install)
+    trailer_url = "https://www.youtube.com/watch?v=official-trailer"
+    _set_overrides(install, {SOURCE_CUSTOM: {"trailerUrl": trailer_url}})
+
+    _import(install)
+
+    record = titledb.store.get_title_record(TITLE_ID)
+    assert record["trailerUrl"] == trailer_url
+    assert _sources_of(install, TITLE_ID) == "custom,titledb"
+
+
 def test_override_only_title_is_queryable(install):
     """A custom entry for an id titledb has never heard of still has to surface."""
     init_db(install.app)

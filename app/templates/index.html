@@ -160,6 +160,131 @@
     </nav>
 </div>
 
+<div class="modal fade game-details-modal" id="gameDetailsModal" tabindex="-1"
+    data-can-edit-trailer="{% if current_user.is_authenticated and current_user.is_admin %}true{% else %}false{% endif %}"
+    aria-labelledby="gameDetailTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="game-detail-hero">
+                <img id="gameDetailBanner" class="game-detail-banner d-none" alt="">
+                <div class="game-detail-hero-shade"></div>
+                <button type="button" class="btn-close game-detail-close" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+                <button type="button" id="gameFavoriteToggle" class="game-favorite-toggle"
+                    aria-pressed="false" title="Add to favorites">
+                    <i class="bi bi-star" aria-hidden="true"></i>
+                    <span class="visually-hidden">Add to favorites</span>
+                </button>
+                <div class="game-detail-hero-copy">
+                    <p id="gameDetailEyebrow" class="game-detail-eyebrow">GAME DETAILS</p>
+                    <h2 id="gameDetailTitle">Loading game...</h2>
+                    <p id="gameDetailSubtitle" class="mb-0"></p>
+                </div>
+            </div>
+            <div class="modal-body game-detail-body">
+                <div id="gameDetailLoading" class="game-detail-state" role="status">
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span>Loading game details...</span>
+                </div>
+                <div id="gameDetailError" class="alert alert-warning d-none" role="alert"></div>
+                <div id="gameDetailContent" class="row g-4 d-none">
+                    <div class="col-lg-8">
+                        <p id="gameDetailIntro" class="game-detail-intro"></p>
+                        <p id="gameDetailDescription" class="game-detail-description"></p>
+                        <p id="gameMetadataSource" class="game-metadata-source d-none"></p>
+
+                        <section id="gameTrailerSection" class="game-detail-section game-trailer-section d-none"
+                            aria-labelledby="gameTrailerHeading">
+                            <div class="game-detail-section-heading">
+                                <h3 id="gameTrailerHeading">Official trailer</h3>
+                                <a id="gameTrailerExternal" class="game-trailer-source" target="_blank"
+                                    rel="noopener noreferrer">Open official source <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+                            </div>
+                            <button type="button" id="gameTrailerPlay" class="game-trailer-play">
+                                <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
+                                <span>Play trailer</span>
+                            </button>
+                            <div id="gameTrailerFrameWrap" class="game-trailer-frame-wrap d-none">
+                                <iframe id="gameTrailerFrame" title="Official game trailer" allow="encrypted-media; picture-in-picture"
+                                    allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                            </div>
+                        </section>
+
+                        <section class="game-detail-section" aria-labelledby="gameScreenshotsHeading">
+                            <div class="game-detail-section-heading">
+                                <h3 id="gameScreenshotsHeading">Screenshots</h3>
+                                <span id="gameScreenshotCount" class="game-detail-section-note"></span>
+                            </div>
+                            <div id="gameScreenshots" class="game-screenshot-strip"></div>
+                            <p id="gameScreenshotsEmpty" class="game-detail-muted d-none">No screenshots available.</p>
+                        </section>
+
+                        <section class="game-detail-section" aria-labelledby="gameDlcHeading">
+                            <div class="game-detail-section-heading">
+                                <h3 id="gameDlcHeading">Downloadable content</h3>
+                                <span id="gameDlcCount" class="game-detail-section-note"></span>
+                            </div>
+                            <div id="gameDlcList" class="game-dlc-list"></div>
+                            <p id="gameDlcEmpty" class="game-detail-muted d-none">No DLC listed in the catalogue.</p>
+                        </section>
+                    </div>
+                    <aside class="col-lg-4 game-detail-sidebar">
+                        <img id="gameDetailBoxArt" class="game-detail-box-art d-none" alt="">
+                        <div id="gameDetailBoxPlaceholder" class="game-detail-box-placeholder">
+                            <i class="bi bi-controller" aria-hidden="true"></i>
+                            <span>NS eShop Server</span>
+                        </div>
+                        <div id="gameDetailCategories" class="game-detail-tags"></div>
+                        <dl id="gameDetailFacts" class="game-detail-facts"></dl>
+                        <div class="game-detail-actions">
+                            <button type="button" id="copyTitleIdBtn" class="game-detail-action">
+                                <i class="bi bi-copy" aria-hidden="true"></i><span>Copy Title ID</span>
+                            </button>
+                            <span id="copyTitleIdFeedback" class="game-detail-muted" aria-live="polite"></span>
+                        </div>
+
+                        {% if current_user.is_authenticated and current_user.is_admin %}
+                        <form id="gameTrailerForm" class="game-trailer-editor">
+                            <label for="gameTrailerUrl" class="form-label">Official trailer URL</label>
+                            <div class="input-group input-group-sm">
+                                <input type="url" id="gameTrailerUrl" class="form-control"
+                                    placeholder="https://youtu.be/..." autocomplete="url">
+                                <button type="submit" id="saveGameTrailerBtn" class="btn btn-primary">Save</button>
+                            </div>
+                            <p class="form-text">Use a link to an official source. YouTube videos load only when played.</p>
+                            <p id="gameTrailerFeedback" class="game-trailer-feedback" aria-live="polite"></p>
+                        </form>
+                        {% endif %}
+
+                        <section class="game-detail-section game-detail-ownership" aria-labelledby="gameOwnershipHeading">
+                            <h3 id="gameOwnershipHeading">Your library</h3>
+                            <div id="gameOwnershipStatus" class="game-ownership-status"></div>
+                            <div id="gameDetailVersions" class="game-detail-versions"></div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="gameScreenshotViewer" class="game-screenshot-viewer d-none" role="dialog"
+    aria-modal="true" aria-labelledby="gameScreenshotCaption" aria-hidden="true">
+    <button type="button" id="closeScreenshotViewer" class="screenshot-viewer-close" aria-label="Close screenshot">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
+    <button type="button" id="previousScreenshot" class="screenshot-viewer-arrow previous" aria-label="Previous screenshot">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+    </button>
+    <figure class="screenshot-viewer-content">
+        <img id="gameScreenshotFull" alt="">
+        <figcaption id="gameScreenshotCaption"></figcaption>
+    </figure>
+    <button type="button" id="nextScreenshot" class="screenshot-viewer-arrow next" aria-label="Next screenshot">
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+    </button>
+</div>
+
 <script src="{{ url_for('static', filename='js/format.js') }}"></script>
 <script>
     // The grid is served page by page: every render is one GraphQL call for exactly the
@@ -172,6 +297,48 @@
     let currentView = 'card'; // Default view is 'card'
     let fetchSeq = 0;    // guards against an older request answering after a newer one
     let searchDebounce;
+    let detailFetchSeq = 0;
+    let activeDetailGame = null;
+    let activeTrailerEmbedUrl = '';
+    let activeScreenshotUrls = [];
+    let activeScreenshotIndex = 0;
+    let activeScreenshotTitle = '';
+    let previousScreenshotTrigger = null;
+    const FAVORITES_STORAGE_KEY = 'ns-eshop-server-favorites';
+
+    document.getElementById('gameDetailsModal').addEventListener('hidden.bs.modal', () => {
+        detailFetchSeq++;
+        document.getElementById('gameTrailerFrame').removeAttribute('src');
+        document.getElementById('gameTrailerFrameWrap').classList.add('d-none');
+        closeScreenshotViewer(false);
+    });
+
+    document.getElementById('gameFavoriteToggle').addEventListener('click', () => {
+        if (activeDetailGame) toggleFavorite(activeDetailGame);
+    });
+    document.getElementById('gameTrailerPlay').addEventListener('click', () => {
+        if (!activeTrailerEmbedUrl) return;
+        const frame = document.getElementById('gameTrailerFrame');
+        frame.src = activeTrailerEmbedUrl;
+        frame.title = `${document.getElementById('gameDetailTitle').textContent} ${uiText('Official trailer')}`;
+        document.getElementById('gameTrailerFrameWrap').classList.remove('d-none');
+        document.getElementById('gameTrailerPlay').classList.add('d-none');
+    });
+    document.getElementById('closeScreenshotViewer').addEventListener('click', () => closeScreenshotViewer());
+    document.getElementById('previousScreenshot').addEventListener('click', () => showScreenshot(activeScreenshotIndex - 1));
+    document.getElementById('nextScreenshot').addEventListener('click', () => showScreenshot(activeScreenshotIndex + 1));
+    document.getElementById('gameScreenshotViewer').addEventListener('click', event => {
+        if (event.target.id === 'gameScreenshotViewer') closeScreenshotViewer();
+    });
+    document.getElementById('copyTitleIdBtn').addEventListener('click', copyCurrentTitleId);
+    document.getElementById('gameTrailerForm')?.addEventListener('submit', saveGameTrailer);
+
+    document.addEventListener('keydown', event => {
+        if (document.getElementById('gameScreenshotViewer').classList.contains('d-none')) return;
+        if (event.key === 'Escape') closeScreenshotViewer();
+        else if (event.key === 'ArrowLeft') showScreenshot(activeScreenshotIndex - 1);
+        else if (event.key === 'ArrowRight') showScreenshot(activeScreenshotIndex + 1);
+    });
 
     // Active filters
     let activeTypeFilter = "";
@@ -198,6 +365,19 @@
         if (body.errors && body.errors.length) {
             throw new Error('GraphQL errors: ' + JSON.stringify(body.errors));
         }
+        return body.data;
+    }
+
+    async function gqlMutate(query, variables) {
+        const response = await fetch('/api/graphql', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+            credentials: 'same-origin',
+            body: JSON.stringify({query, variables}),
+        });
+        if (!response.ok) throw new Error(`GraphQL HTTP ${response.status}`);
+        const body = await response.json();
+        if (body.errors && body.errors.length) throw new Error(body.errors.map(error => error.message).join('\n'));
         return body.data;
     }
 
@@ -228,7 +408,24 @@
                  appType: $appType, search: $search, owned: $owned,
                  upToDate: $upToDate, complete: $complete) {
                 total
-                items { appId titledb { iconUrl } }
+                items {
+                    appId appType owned
+                    titledb { name iconUrl }
+                    title { titleId name ownership { haveBase upToDate complete } }
+                }
+            }
+        }`;
+
+    const TITLE_DETAILS_QUERY = `
+        query TitleDetails($titleId: ID!) {
+            title(titleId: $titleId) {
+                titleId source name bannerUrl iconUrl frontBoxArt description intro
+                developer publisher releaseDate category numberOfPlayers rating
+                ratingContent region regions languages trailerUrl
+                ownership { haveBase upToDate complete }
+                availableVersions { version releaseDate }
+                availableDlc { appId version titledb { name iconUrl } }
+                apps(appType: [BASE, UPDATE, DLC]) { appId appType owned }
             }
         }`;
 
@@ -363,6 +560,8 @@
         if (isBase) {
             return {
                 id: recognized ? title.titleId : title.titleId + ' not found in titledb',
+                titleId: title.titleId,
+                appId: app.appId,
                 title_id_name: title.name || 'Unrecognized',
                 name: title.name || 'Unrecognized',
                 bannerUrl: meta.bannerUrl || PLACEHOLDER_BANNER,
@@ -379,6 +578,8 @@
         const highest = versions.length ? Math.max(...versions.map(v => v.version)) : 0;
         return {
             id: recognized ? app.appId : app.appId + ' not found in titledb',
+            titleId: title.titleId,
+            appId: app.appId,
             title_id_name: title.name || 'Unrecognized',
             name: meta.name || 'Unrecognized',
             bannerUrl: meta.bannerUrl || PLACEHOLDER_BANNER,
@@ -390,6 +591,434 @@
         };
     }
 
+    function detailText(key, fallback) {
+        return fallback || key;
+    }
+
+    function uiText(key) {
+        return window.ownfoilI18n ? window.ownfoilI18n.t(key) : key;
+    }
+
+    function favoriteIds() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) || '[]');
+            return new Set(Array.isArray(saved) ? saved.filter(id => typeof id === 'string') : []);
+        } catch (_) {
+            return new Set();
+        }
+    }
+
+    function isFavorite(titleId) {
+        return !!titleId && favoriteIds().has(String(titleId));
+    }
+
+    function updateFavoriteButton(game) {
+        const button = document.getElementById('gameFavoriteToggle');
+        const favorite = isFavorite(game.titleId || game.appId);
+        const label = uiText(favorite ? 'Remove from favorites' : 'Add to favorites');
+        button.setAttribute('aria-pressed', String(favorite));
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        button.querySelector('i').className = `bi ${favorite ? 'bi-star-fill' : 'bi-star'}`;
+        button.querySelector('.visually-hidden').textContent = label;
+    }
+
+    function toggleFavorite(game) {
+        const titleId = String(game.titleId || game.appId || '');
+        if (!titleId) return;
+        const ids = favoriteIds();
+        if (ids.has(titleId)) ids.delete(titleId);
+        else ids.add(titleId);
+        try {
+            localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([...ids]));
+        } catch (_) {
+            // Keep the current interaction usable if browser storage is unavailable.
+        }
+        const favorite = ids.has(titleId);
+        document.querySelectorAll('[data-favorite-title-id]').forEach(element => {
+            if (element.dataset.favoriteTitleId !== titleId) return;
+            const indicator = element.querySelector('.game-favorite-indicator');
+            if (indicator) indicator.classList.toggle('d-none', !favorite);
+        });
+        updateFavoriteButton(game);
+    }
+
+    function parseTrailerUrl(value) {
+        try {
+            const url = new URL(value);
+            if (url.protocol !== 'https:' || url.username || url.password) return null;
+            const host = url.hostname.toLowerCase();
+            let videoId = '';
+            if (host === 'youtu.be') {
+                videoId = url.pathname.split('/').filter(Boolean)[0] || '';
+            } else if (['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtube-nocookie.com', 'www.youtube-nocookie.com'].includes(host)) {
+                videoId = url.searchParams.get('v') || url.pathname.match(/^\/(?:embed|shorts|live)\/([^/?]+)/)?.[1] || '';
+            }
+            const embeddable = /^[A-Za-z0-9_-]{11}$/.test(videoId);
+            return {href: url.href, embedUrl: embeddable ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0` : ''};
+        } catch (_) {
+            return null;
+        }
+    }
+
+    const SET_TRAILER_MUTATION = `
+        mutation SetTitleTrailer($titleId: ID!, $trailerUrl: String) {
+            setTitleTrailer(titleId: $titleId, trailerUrl: $trailerUrl) { titleId trailerUrl }
+        }`;
+
+    function setTrailerFeedback(message, isError = false) {
+        const feedback = document.getElementById('gameTrailerFeedback');
+        if (!feedback) return;
+        feedback.textContent = message;
+        feedback.classList.toggle('is-error', isError);
+    }
+
+    async function saveGameTrailer(event) {
+        event.preventDefault();
+        if (!activeDetailGame?.titleId) return;
+        const input = document.getElementById('gameTrailerUrl');
+        const value = input.value.trim();
+        if (value && !parseTrailerUrl(value)) {
+            setTrailerFeedback(uiText('Enter a valid HTTPS URL.'), true);
+            return;
+        }
+
+        const button = document.getElementById('saveGameTrailerBtn');
+        button.disabled = true;
+        setTrailerFeedback('');
+        try {
+            await gqlMutate(SET_TRAILER_MUTATION, {
+                titleId: activeDetailGame.titleId,
+                trailerUrl: value || null,
+            });
+            await openGameDetails(activeDetailGame);
+            setTrailerFeedback(uiText('Trailer link saved.'));
+        } catch (error) {
+            console.error(error);
+            setTrailerFeedback(error.message || uiText('Unable to save trailer link.'), true);
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    function openScreenshotViewer(index, trigger) {
+        if (!activeScreenshotUrls.length) return;
+        previousScreenshotTrigger = trigger || document.activeElement;
+        activeScreenshotIndex = (index + activeScreenshotUrls.length) % activeScreenshotUrls.length;
+        const viewer = document.getElementById('gameScreenshotViewer');
+        const image = document.getElementById('gameScreenshotFull');
+        image.src = activeScreenshotUrls[activeScreenshotIndex];
+        image.alt = `${activeScreenshotTitle} ${activeScreenshotIndex + 1}`;
+        document.getElementById('gameScreenshotCaption').textContent =
+            `${activeScreenshotTitle} · ${activeScreenshotIndex + 1}/${activeScreenshotUrls.length}`;
+        viewer.classList.remove('d-none');
+        viewer.setAttribute('aria-hidden', 'false');
+        document.getElementById('closeScreenshotViewer').focus();
+    }
+
+    function showScreenshot(index) {
+        openScreenshotViewer(index, previousScreenshotTrigger);
+    }
+
+    function closeScreenshotViewer(restoreFocus = true) {
+        const viewer = document.getElementById('gameScreenshotViewer');
+        if (!viewer || viewer.classList.contains('d-none')) return;
+        viewer.classList.add('d-none');
+        viewer.setAttribute('aria-hidden', 'true');
+        document.getElementById('gameScreenshotFull').removeAttribute('src');
+        if (restoreFocus && previousScreenshotTrigger?.focus) previousScreenshotTrigger.focus();
+        previousScreenshotTrigger = null;
+    }
+
+    async function copyCurrentTitleId() {
+        const titleId = activeDetailGame?.titleId || activeDetailGame?.appId;
+        const feedback = document.getElementById('copyTitleIdFeedback');
+        if (!titleId) return;
+        try {
+            await navigator.clipboard.writeText(titleId);
+            feedback.textContent = uiText('Copied.');
+        } catch (_) {
+            feedback.textContent = uiText('Copy is unavailable in this browser.');
+        }
+    }
+
+    function formatGameVersion(value) {
+        const version = Number(value);
+        if (!Number.isFinite(version) || version < 0) return String(value);
+        return `v${(version >>> 16) & 0xffff}.${(version >>> 8) & 0xff}.${version & 0xff}`;
+    }
+
+    function formatGameDate(value) {
+        if (!value) return '';
+        const raw = String(value);
+        const normalized = /^\d{8}$/.test(raw)
+            ? `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`
+            : raw;
+        const date = new Date(`${normalized.slice(0, 10)}T00:00:00`);
+        if (Number.isNaN(date.getTime())) return raw;
+        const locale = window.ownfoilI18n?.language === 'es' ? 'es-ES' : 'en-US';
+        return new Intl.DateTimeFormat(locale, {year: 'numeric', month: 'short', day: 'numeric'}).format(date);
+    }
+
+    function setDetailText(id, value, fallback = '') {
+        const element = document.getElementById(id);
+        element.textContent = value || fallback;
+        element.classList.toggle('d-none', !value && !fallback);
+    }
+
+    function appendDetailFact(list, label, value) {
+        if (!value || (Array.isArray(value) && !value.length)) return;
+        const row = document.createElement('div');
+        row.className = 'game-detail-fact';
+        const term = document.createElement('dt');
+        term.textContent = detailText(label, label);
+        const description = document.createElement('dd');
+        description.textContent = Array.isArray(value) ? value.join(', ') : value;
+        row.append(term, description);
+        list.appendChild(row);
+    }
+
+    function renderGameDetails(game, detail) {
+        activeDetailGame = game;
+        updateFavoriteButton(game);
+        const title = detail || {};
+        const selectedDlc = game.app_type === 'DLC'
+            ? (title.availableDlc || []).find(dlc => dlc.appId === game.appId)
+            : null;
+        const contentMeta = selectedDlc?.titledb || title;
+        const displayName = game.app_type === 'DLC'
+            ? (contentMeta.name || game.name || game.title_id_name)
+            : (title.name || game.title_id_name || game.name);
+        const heroBanner = game.bannerUrl && game.bannerUrl !== PLACEHOLDER_BANNER
+            ? game.bannerUrl
+            : title.bannerUrl;
+        const banner = document.getElementById('gameDetailBanner');
+        if (heroBanner) {
+            banner.src = heroBanner;
+            banner.classList.remove('d-none');
+        } else {
+            banner.removeAttribute('src');
+            banner.classList.add('d-none');
+        }
+
+        setDetailText('gameDetailTitle', displayName, game.title_id_name || detailText('Unknown title', 'Unknown title'));
+        setDetailText('gameDetailEyebrow', game.app_type === 'DLC'
+            ? detailText('DOWNLOADABLE CONTENT', 'DOWNLOADABLE CONTENT')
+            : detailText('GAME DETAILS', 'GAME DETAILS'));
+        setDetailText('gameDetailSubtitle', game.app_type === 'DLC'
+            ? `${title.name || game.title_id_name} · ${detailText('DLC', 'DLC')}`
+            : `${title.titleId || game.titleId || game.id} · ${detailText(game.app_type || 'BASE', game.app_type || 'BASE')}`);
+        setDetailText('gameDetailIntro', contentMeta.intro || title.intro);
+        setDetailText('gameDetailDescription', contentMeta.description || title.description,
+            detailText('No description is available for this title.', 'No description is available for this title.'));
+        const customMetadata = String(title.source || '').split(',').includes('custom');
+        setDetailText('gameMetadataSource', customMetadata ? 'Custom metadata' : 'TitleDB catalogue');
+
+        const trailerSection = document.getElementById('gameTrailerSection');
+        const trailerInput = document.getElementById('gameTrailerUrl');
+        const trailerValue = title.trailerUrl || '';
+        const trailer = trailerValue ? parseTrailerUrl(trailerValue) : null;
+        activeTrailerEmbedUrl = trailer?.embedUrl || '';
+        const trailerFrame = document.getElementById('gameTrailerFrame');
+        trailerFrame.removeAttribute('src');
+        document.getElementById('gameTrailerFrameWrap').classList.add('d-none');
+        document.getElementById('gameTrailerPlay').classList.toggle('d-none', !activeTrailerEmbedUrl);
+        document.getElementById('gameTrailerPlay').classList.remove('is-loaded');
+        const trailerLink = document.getElementById('gameTrailerExternal');
+        if (trailer) {
+            trailerLink.href = trailer.href;
+            trailerSection.classList.remove('d-none');
+        } else {
+            trailerLink.removeAttribute('href');
+            trailerSection.classList.add('d-none');
+        }
+        if (trailerInput) {
+            trailerInput.value = trailerValue;
+            setTrailerFeedback('');
+        }
+
+        const boxArt = document.getElementById('gameDetailBoxArt');
+        const boxUrl = contentMeta.frontBoxArt || title.frontBoxArt || contentMeta.iconUrl || game.iconUrl;
+        const placeholder = document.getElementById('gameDetailBoxPlaceholder');
+        if (boxUrl) {
+            boxArt.src = boxUrl;
+            boxArt.alt = '';
+            boxArt.classList.remove('d-none');
+            placeholder.classList.add('d-none');
+        } else {
+            boxArt.removeAttribute('src');
+            boxArt.classList.add('d-none');
+            placeholder.classList.remove('d-none');
+        }
+
+        const facts = document.getElementById('gameDetailFacts');
+        facts.replaceChildren();
+        appendDetailFact(facts, 'Developer', contentMeta.developer || title.developer);
+        appendDetailFact(facts, 'Publisher', contentMeta.publisher || title.publisher);
+        appendDetailFact(facts, 'Released', formatGameDate(contentMeta.releaseDate || title.releaseDate));
+        appendDetailFact(facts, 'Players', contentMeta.numberOfPlayers || title.numberOfPlayers);
+        appendDetailFact(facts, 'Rating', contentMeta.rating || title.rating);
+        appendDetailFact(facts, 'Languages', contentMeta.languages || title.languages);
+        appendDetailFact(facts, 'Title ID', title.titleId || game.titleId || game.appId);
+
+        const categories = document.getElementById('gameDetailCategories');
+        categories.replaceChildren();
+        (contentMeta.category || title.category || []).forEach(category => {
+            const tag = document.createElement('span');
+            tag.className = 'game-detail-category';
+            tag.textContent = category;
+            categories.appendChild(tag);
+        });
+        if (!categories.childElementCount) categories.classList.add('d-none');
+        else categories.classList.remove('d-none');
+
+        const screenshots = document.getElementById('gameScreenshots');
+        const screenshotList = title.screenshots || [];
+        activeScreenshotUrls = screenshotList.slice(0, 20);
+        activeScreenshotIndex = 0;
+        activeScreenshotTitle = displayName;
+        screenshots.replaceChildren();
+        document.getElementById('gameScreenshotCount').textContent = screenshotList.length
+            ? `${screenshotList.length} ${detailText('images', 'images')}` : '';
+        document.getElementById('gameScreenshotsEmpty').classList.toggle('d-none', screenshotList.length > 0);
+        activeScreenshotUrls.forEach((url, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'game-screenshot';
+            button.setAttribute('aria-label', `${detailText('Show screenshot', 'Show screenshot')} ${index + 1}`);
+            const image = document.createElement('img');
+            image.src = url;
+            image.alt = '';
+            button.appendChild(image);
+            button.addEventListener('click', () => openScreenshotViewer(index, button));
+            screenshots.appendChild(button);
+        });
+
+        const ownership = title.ownership;
+        const status = document.getElementById('gameOwnershipStatus');
+        status.replaceChildren();
+        const ownedApps = new Map((title.apps || []).map(app => [app.appId, app.owned]));
+        const hasBase = ownership?.haveBase || false;
+        const baseStatus = document.createElement('span');
+        const selectedDlcOwned = game.app_type === 'DLC' && !!ownedApps.get(game.appId);
+        const hasSelectedContent = game.app_type === 'DLC' ? selectedDlcOwned : hasBase;
+        const selectedStatusLabel = game.app_type === 'DLC'
+            ? detailText(selectedDlcOwned ? 'DLC in library' : 'DLC missing', selectedDlcOwned ? 'DLC in library' : 'DLC missing')
+            : detailText(hasBase ? 'In library' : 'Not in library', hasBase ? 'In library' : 'Not in library');
+        baseStatus.className = `game-ownership-chip ${hasSelectedContent ? 'is-owned' : 'is-missing'}`;
+        baseStatus.innerHTML = `<i class="bi ${hasSelectedContent ? 'bi-check-circle-fill' : 'bi-plus-circle'}" aria-hidden="true"></i>`;
+        baseStatus.append(document.createTextNode(selectedStatusLabel));
+        status.appendChild(baseStatus);
+        if (game.app_type === 'DLC') {
+            const parentStatus = document.createElement('span');
+            parentStatus.className = `game-ownership-chip ${hasBase ? 'is-owned' : 'is-missing'}`;
+            parentStatus.textContent = detailText(hasBase ? 'Base game in library' : 'Base game missing', hasBase ? 'Base game in library' : 'Base game missing');
+            status.appendChild(parentStatus);
+        }
+        if (ownership) {
+            const updateStatus = document.createElement('span');
+            updateStatus.className = `game-ownership-chip ${ownership.upToDate ? 'is-owned' : 'is-missing'}`;
+            updateStatus.textContent = detailText(ownership.upToDate ? 'Up to date' : 'Update missing', ownership.upToDate ? 'Up to date' : 'Update missing');
+            status.appendChild(updateStatus);
+        }
+
+        const dlcList = document.getElementById('gameDlcList');
+        const dlc = title.availableDlc || [];
+        dlcList.replaceChildren();
+        const ownedDlcCount = dlc.filter(item => ownedApps.get(item.appId)).length;
+        document.getElementById('gameDlcCount').textContent = dlc.length
+            ? `${ownedDlcCount}/${dlc.length} ${detailText('owned', 'owned')}` : '';
+        document.getElementById('gameDlcEmpty').classList.toggle('d-none', dlc.length > 0);
+        dlc.slice(0, 40).forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'game-dlc-row';
+            const iconUrl = item.titledb?.iconUrl;
+            if (iconUrl) {
+                const icon = document.createElement('img');
+                icon.src = iconUrl;
+                icon.alt = '';
+                row.appendChild(icon);
+            } else {
+                const icon = document.createElement('span');
+                icon.className = 'game-dlc-icon';
+                icon.innerHTML = '<i class="bi bi-box-seam" aria-hidden="true"></i>';
+                row.appendChild(icon);
+            }
+            const name = document.createElement('span');
+            name.className = 'game-dlc-name';
+            name.textContent = item.titledb?.name || item.appId;
+            const owned = !!ownedApps.get(item.appId);
+            const state = document.createElement('span');
+            state.className = `game-dlc-state ${owned ? 'is-owned' : 'is-missing'}`;
+            state.textContent = detailText(owned ? 'Owned' : 'Missing', owned ? 'Owned' : 'Missing');
+            row.append(name, state);
+            dlcList.appendChild(row);
+        });
+        if (dlc.length > 40) {
+            const remainder = document.createElement('p');
+            remainder.className = 'game-detail-muted';
+            remainder.textContent = detailText('and more...', 'and more...');
+            dlcList.appendChild(remainder);
+        }
+
+        const versionList = document.getElementById('gameDetailVersions');
+        versionList.replaceChildren();
+        const versions = title.availableVersions || [];
+        const versionHeading = document.createElement('h4');
+        versionHeading.textContent = detailText('Available updates', 'Available updates');
+        versionList.appendChild(versionHeading);
+        if (!versions.length) {
+            const empty = document.createElement('p');
+            empty.className = 'game-detail-muted';
+            empty.textContent = detailText('No update versions listed.', 'No update versions listed.');
+            versionList.appendChild(empty);
+        } else {
+            versions.slice(-5).reverse().forEach(version => {
+                const row = document.createElement('div');
+                row.className = 'game-version-row';
+                const versionName = document.createElement('strong');
+                versionName.textContent = formatGameVersion(version.version);
+                const release = document.createElement('span');
+                release.textContent = formatGameDate(version.releaseDate) || detailText('Release date unknown', 'Release date unknown');
+                row.append(versionName, release);
+                versionList.appendChild(row);
+            });
+        }
+    }
+
+    async function openGameDetails(game) {
+        const request = ++detailFetchSeq;
+        activeDetailGame = game;
+        updateFavoriteButton(game);
+        const modalElement = document.getElementById('gameDetailsModal');
+        bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        document.getElementById('gameDetailLoading').classList.remove('d-none');
+        document.getElementById('gameDetailError').classList.add('d-none');
+        document.getElementById('gameDetailContent').classList.add('d-none');
+        setDetailText('gameDetailTitle', game.title_id_name || game.name, 'Loading game...');
+        const subtitle = game.app_type === 'DLC'
+            ? `${game.title_id_name} · ${detailText('DLC', 'DLC')}`
+            : `${game.titleId || game.appId} · ${detailText(game.app_type || 'BASE', game.app_type || 'BASE')}`;
+        setDetailText('gameDetailSubtitle', subtitle);
+
+        try {
+            if (!game.titleId) throw new Error(detailText('No catalogue entry is linked to this item.', 'No catalogue entry is linked to this item.'));
+            const data = await gqlFetch(TITLE_DETAILS_QUERY, {titleId: game.titleId});
+            if (request !== detailFetchSeq) return;
+            if (!data.title) throw new Error(detailText('No catalogue entry was found for this item.', 'No catalogue entry was found for this item.'));
+            renderGameDetails(game, data.title);
+            document.getElementById('gameDetailLoading').classList.add('d-none');
+            document.getElementById('gameDetailContent').classList.remove('d-none');
+        } catch (error) {
+            if (request !== detailFetchSeq) return;
+            console.error(error);
+            document.getElementById('gameDetailLoading').classList.add('d-none');
+            const errorBox = document.getElementById('gameDetailError');
+            errorBox.textContent = error.message || detailText('Unable to load game details.', 'Unable to load game details.');
+            errorBox.classList.remove('d-none');
+        }
+    }
+
     function renderCardView(games) {
         const gameGrid = $('#gameGrid');
         gameGrid.empty(); // Clear existing games
@@ -397,10 +1026,26 @@
         games.forEach(function (game) {
             const gameCol = $('<div class="col game-col"></div>').addClass(cardColumnClasses());
 
-            const card = $('<div class="card text-bg-dark game-card"></div>');
+            const card = $('<div class="card text-bg-dark game-card" role="button" tabindex="0"></div>')
+                .attr('aria-label', `${detailText('View details for', 'View details for')} ${game.title_id_name || game.name}`)
+                .attr('data-favorite-title-id', game.titleId || game.appId);
+            card.on('click', function (event) {
+                if ($(event.target).closest('.version-tag').length) return;
+                openGameDetails(game);
+            });
+            card.on('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openGameDetails(game);
+                }
+            });
 
             const img = $('<img class="card-img"></img>').attr('src', game.bannerUrl);
             card.append(img);
+
+            const favoriteIndicator = $('<span class="game-favorite-indicator" aria-hidden="true"><i class="bi bi-star-fill"></i></span>');
+            favoriteIndicator.toggleClass('d-none', !isFavorite(game.titleId || game.appId));
+            card.append(favoriteIndicator);
 
             const cardOverlay = $('<div class="card-img-overlay game-info"></div>');
 
@@ -435,6 +1080,7 @@
                         trigger: 'click',
                         placement: 'top',
                     });
+                    versionBadge.on('click', event => event.stopPropagation());
                     versionBadge.css('cursor', 'pointer');
                 } else {
                     // version tooltip on hover
@@ -462,8 +1108,27 @@
         gameGrid.empty(); // Clear existing games
 
         apps.forEach(app => {
-            const icon = $('<img class="game-icon">').attr('src', (app.titledb || {}).iconUrl || '');
-            gameGrid.append(icon);
+            const title = app.title || {};
+            const game = {
+                titleId: title.titleId || app.appId,
+                appId: app.appId,
+                title_id_name: title.name || (app.titledb || {}).name || 'Unrecognized',
+                name: (app.titledb || {}).name || title.name || 'Unrecognized',
+                iconUrl: (app.titledb || {}).iconUrl || '',
+                bannerUrl: '',
+                app_type: app.appType,
+                owned: app.owned,
+            };
+            const button = $('<button type="button" class="game-icon-button"></button>')
+                .attr('aria-label', `${detailText('View details for', 'View details for')} ${game.title_id_name}`)
+                .attr('data-favorite-title-id', game.titleId || game.appId)
+                .on('click', () => openGameDetails(game));
+            const icon = $('<img class="game-icon">').attr('src', game.iconUrl).attr('alt', '');
+            button.append(icon);
+            const favoriteIndicator = $('<span class="game-favorite-indicator d-none" aria-hidden="true"><i class="bi bi-star-fill"></i></span>');
+            favoriteIndicator.toggleClass('d-none', !isFavorite(game.titleId || game.appId));
+            button.append(favoriteIndicator);
+            gameGrid.append(button);
         });
 
         // Adjust icon sizes based on the slider value
@@ -564,8 +1229,9 @@
         // Calculate the size of the icons based on the slider value
         const iconSize = 100 / (cardSize + 3); // Assuming 100 is the maximum size
 
-        // Update the CSS of the game icons
-        $('.game-icon').css('width', `${iconSize}%`);
+        // The button owns the grid width; the artwork fills it without changing layout.
+        $('.game-icon-button').css('width', `${iconSize}%`);
+        $('.game-icon').css('width', '100%');
     }
 
     function saveFiltersToStorage() {

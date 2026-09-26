@@ -14,6 +14,62 @@
         'Logout': 'Cerrar sesión',
         'Your collection': 'Tu colección',
         'The titles tracked by your server, all in one place.': 'Los títulos registrados en tu servidor, en un solo lugar.',
+        'GAME DETAILS': 'DETALLES DEL JUEGO',
+        'DOWNLOADABLE CONTENT': 'CONTENIDO DESCARGABLE',
+        'Loading game...': 'Cargando juego...',
+        'Loading game details...': 'Cargando información del juego...',
+        'No catalogue entry is linked to this item.': 'Este elemento no tiene una ficha de catálogo asociada.',
+        'No catalogue entry was found for this item.': 'No se encontró una ficha de catálogo para este elemento.',
+        'Unable to load game details.': 'No se pudo cargar la información del juego.',
+        'No description is available for this title.': 'No hay una descripción disponible para este título.',
+        'Screenshots': 'Capturas de pantalla',
+        'No screenshots available.': 'No hay capturas disponibles.',
+        'Show screenshot': 'Mostrar captura',
+        'images': 'imágenes',
+        'Downloadable content': 'Contenido descargable',
+        'No DLC listed in the catalogue.': 'El catálogo no incluye DLC para este juego.',
+        'and more...': 'y más...',
+        'Your library': 'Tu biblioteca',
+        'In library': 'En tu biblioteca',
+        'Not in library': 'No está en tu biblioteca',
+        'DLC in library': 'DLC en tu biblioteca',
+        'DLC missing': 'DLC faltante',
+        'Base game in library': 'Juego base en tu biblioteca',
+        'Base game missing': 'Falta el juego base',
+        'Update missing': 'Falta la actualización',
+        'Available updates': 'Actualizaciones disponibles',
+        'No update versions listed.': 'No hay versiones de actualización registradas.',
+        'Release date unknown': 'Fecha de lanzamiento desconocida',
+        'View details for': 'Ver detalles de',
+        'Developer': 'Desarrollador',
+        'Publisher': 'Distribuidora',
+        'Released': 'Lanzamiento',
+        'Players': 'Jugadores',
+        'Rating': 'Clasificación por edad',
+        'Languages': 'Idiomas',
+        'Title ID': 'ID del título',
+        'Copy Title ID': 'Copiar ID del título',
+        'Copied.': 'Copiado.',
+        'Copy is unavailable in this browser.': 'Este navegador no permite copiar.',
+        'Official trailer': 'Tráiler oficial',
+        'Open official source': 'Abrir fuente oficial',
+        'Play trailer': 'Reproducir tráiler',
+        'Official game trailer': 'Tráiler oficial del juego',
+        'Official trailer URL': 'URL del tráiler oficial',
+        'Use a link to an official source. YouTube videos load only when played.': 'Usa un enlace a una fuente oficial. Los vídeos de YouTube solo cargan al reproducirlos.',
+        'Trailer link saved.': 'Enlace del tráiler guardado.',
+        'Unable to save trailer link.': 'No se pudo guardar el enlace del tráiler.',
+        'Enter a valid HTTPS URL.': 'Introduce una URL HTTPS válida.',
+        'Custom metadata': 'Metadatos personalizados',
+        'TitleDB catalogue': 'Catálogo TitleDB',
+        'Add to favorites': 'Añadir a favoritos',
+        'Remove from favorites': 'Quitar de favoritos',
+        'Close screenshot': 'Cerrar captura',
+        'Previous screenshot': 'Captura anterior',
+        'Next screenshot': 'Captura siguiente',
+        'Screenshot': 'Captura',
+        'owned': 'en tu biblioteca',
+        'Unknown title': 'Título desconocido',
         'Loading library...': 'Cargando biblioteca...',
         'catalogue entries': 'elementos del catálogo',
         'catalogue entry': 'elemento del catálogo',
@@ -344,6 +400,7 @@
         complete: 'completos',
         'up to date': 'actualizados',
         files: 'archivos',
+        images: 'imágenes',
     };
     const originalText = new WeakMap();
     const originalAttributes = new WeakMap();
@@ -365,15 +422,21 @@
             return value.replace(trimmed, `${catalogueCount[1]} ${noun}`);
         }
 
-        const countLabel = trimmed.match(/^([\d.,]+) (titles|complete|up to date|files)$/i);
+        const countLabel = trimmed.match(/^([\d.,]+) (titles|complete|up to date|files|images)$/i);
         if (countLabel) {
             const label = pluralLabels[countLabel[2].toLowerCase()] || countLabel[2];
             return value.replace(trimmed, `${countLabel[1]} ${label}`);
         }
+        const ownedFraction = trimmed.match(/^([\d.,]+)\s*\/\s*([\d.,]+)\s+owned$/i);
+        if (ownedFraction) return value.replace(trimmed, `${ownedFraction[1]}/${ownedFraction[2]} en tu biblioteca`);
         const identifiedCount = trimmed.match(/^([\d.,]+) identified$/i);
         if (identifiedCount) return value.replace(trimmed, `${identifiedCount[1]} identificados`);
         const workerName = trimmed.match(/^Worker (\d+)$/i);
         if (workerName) return value.replace(trimmed, `Proceso ${workerName[1]}`);
+        const detailsLabel = trimmed.match(/^View details for (.+)$/i);
+        if (detailsLabel) return value.replace(trimmed, `Ver detalles de ${detailsLabel[1]}`);
+        const screenshotLabel = trimmed.match(/^Show screenshot (\d+)$/i);
+        if (screenshotLabel) return value.replace(trimmed, `Mostrar captura ${screenshotLabel[1]}`);
 
         let result = value;
         result = result.replace(/^of ([\d.,]+) in the catalogue$/i, 'de $1 en el catálogo');
@@ -404,7 +467,7 @@
     }
 
     function translateAttributes(element) {
-        const attributes = ['aria-label', 'aria-valuetext', 'placeholder', 'title', 'data-bs-title'];
+        const attributes = ['aria-label', 'aria-valuetext', 'alt', 'placeholder', 'title', 'data-bs-title'];
         let saved = originalAttributes.get(element);
         if (!saved) {
             saved = {};

@@ -480,6 +480,8 @@ class Title:
     rights_id: Optional[str] = desc("Rights id, as used by the content's DRM.",
                                     default=None)
     screenshots: Optional[List[str]] = desc("URLs of store screenshots.", default=None)
+    trailer_url: Optional[str] = desc(
+        "URL of an official trailer supplied by a custom metadata override.", default=None)
     size: Optional[str] = desc(
         "Install size as titledb reports it - a string, unlike `File.size`, because "
         "the catalogue value is not reliably numeric. Sorting by SIZE casts it.",

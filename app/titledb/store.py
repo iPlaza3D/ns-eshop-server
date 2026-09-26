@@ -382,6 +382,50 @@ def set_override(title_id, record, source=SOURCE_CUSTOM):
     return True, None
 
 
+def set_override_field(title_id, field, value, source=SOURCE_CUSTOM):
+    """Set or clear one field while preserving the source's other overrides."""
+    valid_fields = {json_key for json_key, column, _kind in _TITLES_COLUMNS
+                    if column != 'id'}
+    if field not in valid_fields:
+        return False, f'Unknown metadata field: {field}'
+
+    normalized_id = str(title_id).upper()
+    record = list_overrides(source).get(normalized_id)
+    if value is None or (isinstance(value, str) and not value.strip()):
+        if record is None:
+            return True, None
+        record.pop(field, None)
+        if not (set(record) - {'id'}):
+            return delete_override(normalized_id, source)
+    else:
+        if record is None:
+            record = {'id': normalized_id}
+        record[field] = value
+    return set_override(normalized_id, record, source)
+
+
+def set_override_field(title_id, field, value, source=SOURCE_CUSTOM):
+    """Set or clear one metadata field without dropping the source's other overrides."""
+    valid_fields = {json_key for json_key, column, _kind in _TITLES_COLUMNS
+                    if column != 'id'}
+    if field not in valid_fields:
+        return False, f'Unknown metadata field: {field}'
+
+    normalized_id = str(title_id).upper()
+    record = list_overrides(source).get(normalized_id)
+    if value is None or (isinstance(value, str) and not value.strip()):
+        if record is None:
+            return True, None
+        record.pop(field, None)
+        if not (set(record) - {'id'}):
+            return delete_override(normalized_id, source)
+    else:
+        if record is None:
+            record = {'id': normalized_id}
+        record[field] = value
+    return set_override(normalized_id, record, source)
+
+
 def delete_override(title_id, source=SOURCE_CUSTOM):
     """Drop an override, restoring the values of the next source down. Returns (ok, error)."""
     from db import delete_title_override
