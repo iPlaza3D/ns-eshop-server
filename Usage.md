@@ -37,9 +37,7 @@ The landing page, a grid view of your whole library, with labels and filtering t
 
 You can filter by type (base game or DLC), by ownership, by whether an update is missing, and by whether the DLC set is complete. There is also a search box, a card and an icon view, a card size slider and a page size selector. The version badge on a card opens a popover listing every known version of that title with its release date, and whether you own it.
 
-Select a card or icon to open its detail sheet. It loads store metadata on demand, including its description, release information, known updates, DLC and ownership. Select a screenshot to open the full-screen gallery; use the arrow keys or the on-screen controls to browse. The star marks a favorite in this browser only, and the title ID can be copied from the detail sheet.
-
-Admins can add or replace a game's official trailer URL from its detail sheet. Use an HTTPS URL. YouTube links are embedded with privacy-enhanced hosting and are not loaded until `Play trailer` is selected; other HTTPS sources open in a new tab. Trailer URLs are manual metadata overrides, not scraped from game pages.
+Select a card or icon to open its detail sheet. It loads store metadata on demand, including its description, release information, known updates, DLC and ownership. The star marks a favorite in this browser only, and the title ID can be copied from the detail sheet.
 
 ## Setup page
 

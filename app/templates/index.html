@@ -179,7 +179,6 @@
 </div>
 
 <div class="modal fade game-details-modal" id="gameDetailsModal" tabindex="-1"
-    data-can-edit-trailer="{% if current_user.is_authenticated and current_user.is_admin %}true{% else %}false{% endif %}"
     aria-labelledby="gameDetailTitle" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -211,25 +210,6 @@
                         <p id="gameDetailDescription" class="game-detail-description"></p>
                         <p id="gameMetadataSource" class="game-metadata-source d-none"></p>
 
-                        <section id="gameTrailerSection" class="game-detail-section game-trailer-section d-none"
-                            aria-labelledby="gameTrailerHeading">
-                            <div class="game-detail-section-heading">
-                                <h3 id="gameTrailerHeading">Official trailer</h3>
-                                <a id="gameTrailerExternal" class="game-trailer-source" target="_blank"
-                                    rel="noopener noreferrer"><span>Open on Nintendo</span> <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
-                            </div>
-                            <p id="gameTrailerNote" class="game-trailer-note">Opens the official Nintendo page in a new tab.</p>
-                        </section>
-
-                        <section class="game-detail-section" aria-labelledby="gameScreenshotsHeading">
-                            <div class="game-detail-section-heading">
-                                <h3 id="gameScreenshotsHeading">Screenshots</h3>
-                                <span id="gameScreenshotCount" class="game-detail-section-note"></span>
-                            </div>
-                            <div id="gameScreenshots" class="game-screenshot-strip"></div>
-                            <p id="gameScreenshotsEmpty" class="game-detail-muted d-none">No screenshots available.</p>
-                        </section>
-
                         <section class="game-detail-section" aria-labelledby="gameDlcHeading">
                             <div class="game-detail-section-heading">
                                 <h3 id="gameDlcHeading">Downloadable content</h3>
@@ -254,19 +234,6 @@
                             <span id="copyTitleIdFeedback" class="game-detail-muted" aria-live="polite"></span>
                         </div>
 
-                        {% if current_user.is_authenticated and current_user.is_admin %}
-                        <form id="gameTrailerForm" class="game-trailer-editor">
-                            <label for="gameTrailerUrl" class="form-label">Official trailer URL</label>
-                            <div class="input-group input-group-sm">
-                                <input type="url" id="gameTrailerUrl" class="form-control"
-                                    placeholder="https://www.nintendo.com/..." autocomplete="url">
-                                <button type="submit" id="saveGameTrailerBtn" class="btn btn-primary">Save</button>
-                            </div>
-                            <p class="form-text">Use a page on an official Nintendo website. Video is not downloaded or embedded.</p>
-                            <p id="gameTrailerFeedback" class="game-trailer-feedback" aria-live="polite"></p>
-                        </form>
-                        {% endif %}
-
                         <section class="game-detail-section game-detail-ownership" aria-labelledby="gameOwnershipHeading">
                             <h3 id="gameOwnershipHeading">Your library</h3>
                             <div id="gameOwnershipStatus" class="game-ownership-status"></div>
@@ -277,23 +244,6 @@
             </div>
         </div>
     </div>
-</div>
-
-<div id="gameScreenshotViewer" class="game-screenshot-viewer d-none" role="dialog"
-    aria-modal="true" aria-labelledby="gameScreenshotCaption" aria-hidden="true">
-    <button type="button" id="closeScreenshotViewer" class="screenshot-viewer-close" aria-label="Close screenshot">
-        <i class="bi bi-x-lg" aria-hidden="true"></i>
-    </button>
-    <button type="button" id="previousScreenshot" class="screenshot-viewer-arrow previous" aria-label="Previous screenshot">
-        <i class="bi bi-chevron-left" aria-hidden="true"></i>
-    </button>
-    <figure class="screenshot-viewer-content">
-        <img id="gameScreenshotFull" alt="">
-        <figcaption id="gameScreenshotCaption"></figcaption>
-    </figure>
-    <button type="button" id="nextScreenshot" class="screenshot-viewer-arrow next" aria-label="Next screenshot">
-        <i class="bi bi-chevron-right" aria-hidden="true"></i>
-    </button>
 </div>
 
 <script src="{{ url_for('static', filename='js/format.js') }}"></script>
@@ -311,35 +261,16 @@
     let detailFetchSeq = 0;
     let activeDetailGame = null;
     let featuredGame = null;
-    let activeScreenshotUrls = [];
-    let activeScreenshotIndex = 0;
-    let activeScreenshotTitle = '';
-    let previousScreenshotTrigger = null;
     const FAVORITES_STORAGE_KEY = 'ns-eshop-server-favorites';
 
     document.getElementById('gameDetailsModal').addEventListener('hidden.bs.modal', () => {
         detailFetchSeq++;
-        closeScreenshotViewer(false);
     });
 
     document.getElementById('gameFavoriteToggle').addEventListener('click', () => {
         if (activeDetailGame) toggleFavorite(activeDetailGame);
     });
-    document.getElementById('closeScreenshotViewer').addEventListener('click', () => closeScreenshotViewer());
-    document.getElementById('previousScreenshot').addEventListener('click', () => showScreenshot(activeScreenshotIndex - 1));
-    document.getElementById('nextScreenshot').addEventListener('click', () => showScreenshot(activeScreenshotIndex + 1));
-    document.getElementById('gameScreenshotViewer').addEventListener('click', event => {
-        if (event.target.id === 'gameScreenshotViewer') closeScreenshotViewer();
-    });
     document.getElementById('copyTitleIdBtn').addEventListener('click', copyCurrentTitleId);
-    document.getElementById('gameTrailerForm')?.addEventListener('submit', saveGameTrailer);
-
-    document.addEventListener('keydown', event => {
-        if (document.getElementById('gameScreenshotViewer').classList.contains('d-none')) return;
-        if (event.key === 'Escape') closeScreenshotViewer();
-        else if (event.key === 'ArrowLeft') showScreenshot(activeScreenshotIndex - 1);
-        else if (event.key === 'ArrowRight') showScreenshot(activeScreenshotIndex + 1);
-    });
 
     // Active filters
     let activeOwnershipFilter = "";
@@ -421,7 +352,7 @@
             title(titleId: $titleId) {
                 titleId source name bannerUrl iconUrl frontBoxArt description intro
                 developer publisher releaseDate category numberOfPlayers rating
-                ratingContent region regions languages trailerUrl
+                ratingContent region regions languages
                 ownership { haveBase upToDate complete }
                 availableVersions { version releaseDate }
                 availableDlc { appId version titledb { name iconUrl } }
@@ -818,100 +749,6 @@
         updateFavoriteButton(game);
     }
 
-    const OFFICIAL_NINTENDO_DOMAINS = [
-        'nintendo.com', 'nintendo.co.jp', 'nintendo.co.uk', 'nintendo.com.au',
-        'nintendo.com.br', 'nintendo.com.mx', 'nintendo-europe.com', 'nintendo.eu',
-        'nintendo.es', 'nintendo.fr', 'nintendo.de', 'nintendo.it', 'nintendo.nl',
-        'nintendo.be', 'nintendo.lu', 'nintendo.ch', 'nintendo.at', 'nintendo.pt',
-        'nintendo.pl', 'nintendo.cz', 'nintendo.sk', 'nintendo.hu', 'nintendo.ro',
-        'nintendo.gr', 'nintendo.hr', 'nintendo.si', 'nintendo.se', 'nintendo.dk',
-        'nintendo.no', 'nintendo.fi', 'nintendo.com.hk', 'nintendo.tw', 'nintendo.kr',
-    ];
-
-    function isOfficialNintendoHost(hostname) {
-        return OFFICIAL_NINTENDO_DOMAINS.some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
-    }
-
-    function parseTrailerUrl(value) {
-        try {
-            const url = new URL(value);
-            if (url.protocol !== 'https:' || url.username || url.password
-                || !isOfficialNintendoHost(url.hostname.toLowerCase())) return null;
-            return {href: url.href};
-        } catch (_) {
-            return null;
-        }
-    }
-
-    const SET_TRAILER_MUTATION = `
-        mutation SetTitleTrailer($titleId: ID!, $trailerUrl: String) {
-            setTitleTrailer(titleId: $titleId, trailerUrl: $trailerUrl) { titleId trailerUrl }
-        }`;
-
-    function setTrailerFeedback(message, isError = false) {
-        const feedback = document.getElementById('gameTrailerFeedback');
-        if (!feedback) return;
-        feedback.textContent = message;
-        feedback.classList.toggle('is-error', isError);
-    }
-
-    async function saveGameTrailer(event) {
-        event.preventDefault();
-        if (!activeDetailGame?.titleId) return;
-        const input = document.getElementById('gameTrailerUrl');
-        const value = input.value.trim();
-        if (value && !parseTrailerUrl(value)) {
-            setTrailerFeedback(uiText('Enter an official Nintendo HTTPS URL.'), true);
-            return;
-        }
-
-        const button = document.getElementById('saveGameTrailerBtn');
-        button.disabled = true;
-        setTrailerFeedback('');
-        try {
-            await gqlMutate(SET_TRAILER_MUTATION, {
-                titleId: activeDetailGame.titleId,
-                trailerUrl: value || null,
-            });
-            await openGameDetails(activeDetailGame);
-            setTrailerFeedback(uiText('Trailer link saved.'));
-        } catch (error) {
-            console.error(error);
-            setTrailerFeedback(error.message || uiText('Unable to save trailer link.'), true);
-        } finally {
-            button.disabled = false;
-        }
-    }
-
-    function openScreenshotViewer(index, trigger) {
-        if (!activeScreenshotUrls.length) return;
-        previousScreenshotTrigger = trigger || document.activeElement;
-        activeScreenshotIndex = (index + activeScreenshotUrls.length) % activeScreenshotUrls.length;
-        const viewer = document.getElementById('gameScreenshotViewer');
-        const image = document.getElementById('gameScreenshotFull');
-        image.src = activeScreenshotUrls[activeScreenshotIndex];
-        image.alt = `${activeScreenshotTitle} ${activeScreenshotIndex + 1}`;
-        document.getElementById('gameScreenshotCaption').textContent =
-            `${activeScreenshotTitle} · ${activeScreenshotIndex + 1}/${activeScreenshotUrls.length}`;
-        viewer.classList.remove('d-none');
-        viewer.setAttribute('aria-hidden', 'false');
-        document.getElementById('closeScreenshotViewer').focus();
-    }
-
-    function showScreenshot(index) {
-        openScreenshotViewer(index, previousScreenshotTrigger);
-    }
-
-    function closeScreenshotViewer(restoreFocus = true) {
-        const viewer = document.getElementById('gameScreenshotViewer');
-        if (!viewer || viewer.classList.contains('d-none')) return;
-        viewer.classList.add('d-none');
-        viewer.setAttribute('aria-hidden', 'true');
-        document.getElementById('gameScreenshotFull').removeAttribute('src');
-        if (restoreFocus && previousScreenshotTrigger?.focus) previousScreenshotTrigger.focus();
-        previousScreenshotTrigger = null;
-    }
-
     async function copyCurrentTitleId() {
         const titleId = activeDetailGame?.titleId || activeDetailGame?.appId;
         const feedback = document.getElementById('copyTitleIdFeedback');
@@ -996,26 +833,6 @@
         const customMetadata = String(title.source || '').split(',').includes('custom');
         setDetailText('gameMetadataSource', customMetadata ? 'Custom metadata' : 'TitleDB catalogue');
 
-        const trailerSection = document.getElementById('gameTrailerSection');
-        const trailerInput = document.getElementById('gameTrailerUrl');
-        const trailerValue = title.trailerUrl || '';
-        const trailer = trailerValue ? parseTrailerUrl(trailerValue) : null;
-        const trailerLink = document.getElementById('gameTrailerExternal');
-        const trailerNote = document.getElementById('gameTrailerNote');
-        if (trailer) {
-            trailerLink.href = trailer.href;
-            trailerLink.querySelector('span').textContent = uiText('Open on Nintendo');
-            trailerNote.textContent = uiText('Opens the official Nintendo page in a new tab.');
-            trailerSection.classList.remove('d-none');
-        } else {
-            trailerLink.removeAttribute('href');
-            trailerSection.classList.add('d-none');
-        }
-        if (trailerInput) {
-            trailerInput.value = trailerValue;
-            setTrailerFeedback('');
-        }
-
         const boxArt = document.getElementById('gameDetailBoxArt');
         const boxUrl = contentMeta.frontBoxArt || title.frontBoxArt || contentMeta.iconUrl || game.iconUrl;
         const placeholder = document.getElementById('gameDetailBoxPlaceholder');
@@ -1050,28 +867,6 @@
         });
         if (!categories.childElementCount) categories.classList.add('d-none');
         else categories.classList.remove('d-none');
-
-        const screenshots = document.getElementById('gameScreenshots');
-        const screenshotList = title.screenshots || [];
-        activeScreenshotUrls = screenshotList.slice(0, 20);
-        activeScreenshotIndex = 0;
-        activeScreenshotTitle = displayName;
-        screenshots.replaceChildren();
-        document.getElementById('gameScreenshotCount').textContent = screenshotList.length
-            ? `${screenshotList.length} ${detailText('images', 'images')}` : '';
-        document.getElementById('gameScreenshotsEmpty').classList.toggle('d-none', screenshotList.length > 0);
-        activeScreenshotUrls.forEach((url, index) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'game-screenshot';
-            button.setAttribute('aria-label', `${detailText('Show screenshot', 'Show screenshot')} ${index + 1}`);
-            const image = document.createElement('img');
-            image.src = url;
-            image.alt = '';
-            button.appendChild(image);
-            button.addEventListener('click', () => openScreenshotViewer(index, button));
-            screenshots.appendChild(button);
-        });
 
         const ownership = title.ownership;
         const status = document.getElementById('gameOwnershipStatus');

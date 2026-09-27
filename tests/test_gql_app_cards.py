@@ -197,8 +197,8 @@ def test_base_cards_carry_the_titles_update_history(library):
 def test_title_detail_query_includes_store_metadata_and_owned_dlcs(library):
     query = """
     query TitleDetails($titleId: ID!) {
-        title(titleId: $titleId) {
-            titleId name publisher description frontBoxArt screenshots
+            title(titleId: $titleId) {
+                titleId name publisher description frontBoxArt
             ownership { haveBase upToDate complete }
             availableVersions { version releaseDate }
             availableDlc { appId version titledb { name iconUrl } }
@@ -221,6 +221,17 @@ def test_title_detail_query_includes_store_metadata_and_owned_dlcs(library):
         ALPHA_DLC_1: False,
         ALPHA_DLC_2: True,
     }
+
+
+def test_title_details_do_not_expose_screenshots_or_trailers(library):
+    response = library.client.get("/api/graphql", query_string={"query": """
+        query { title(titleId: "%s") { screenshots trailerUrl } }""" % ALPHA})
+
+    body = response.get_json()
+    assert body.get("errors")
+    messages = " ".join(error["message"].lower() for error in body["errors"])
+    assert "screenshots" in messages
+    assert "trailerurl" in messages
 
 
 def test_dlc_cards_carry_their_own_versions_and_their_parent(library):

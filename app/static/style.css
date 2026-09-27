@@ -1177,39 +1177,6 @@ body {
     font-size: .8rem;
 }
 
-.game-screenshot-strip {
-    display: flex;
-    gap: .6rem;
-    overflow-x: auto;
-    padding: .15rem .05rem .55rem;
-    scrollbar-color: #37607b transparent;
-    scrollbar-width: thin;
-}
-
-.game-screenshot {
-    flex: 0 0 clamp(10rem, 25vw, 15rem);
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-    padding: 0;
-    border: 1px solid var(--detail-line);
-    border-radius: 5px;
-    background: var(--detail-panel);
-    cursor: pointer;
-}
-
-.game-screenshot img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform .2s ease;
-}
-
-.game-screenshot:hover img,
-.game-screenshot:focus-visible img {
-    transform: scale(1.04);
-}
-
 .game-detail-sidebar {
     min-width: 0;
 }
@@ -1372,8 +1339,7 @@ body {
 .game-card[role="button"] { cursor: pointer; }
 
 .game-card[role="button"]:focus-visible,
-.game-icon-button:focus-visible,
-.game-screenshot:focus-visible {
+.game-icon-button:focus-visible {
     outline: 2px solid #66c0f4;
     outline-offset: 3px;
 }
@@ -1457,82 +1423,6 @@ body {
     font-size: .7rem;
 }
 
-.game-trailer-section {
-    padding: 1rem;
-    border: 1px solid var(--detail-line);
-    border-radius: 5px;
-    background: rgba(23, 35, 48, .72);
-}
-
-.game-trailer-section .game-detail-section-heading {
-    align-items: center;
-}
-
-.game-trailer-source {
-    color: var(--detail-accent);
-    font-size: .75rem;
-    text-decoration: none;
-}
-
-.game-trailer-source:hover { text-decoration: underline; }
-
-.game-trailer-play {
-    display: inline-flex;
-    align-items: center;
-    gap: .5rem;
-    padding: .55rem .8rem;
-    border: 1px solid rgba(102, 192, 244, .35);
-    border-radius: 4px;
-    color: #d9f1ff;
-    background: linear-gradient(90deg, rgba(6, 191, 255, .2), rgba(45, 115, 255, .2));
-}
-
-.game-trailer-play i { color: var(--detail-accent); font-size: 1.1rem; }
-
-.game-trailer-frame-wrap {
-    width: 100%;
-    margin-top: .75rem;
-    overflow: hidden;
-    border-radius: 4px;
-    background: #05090d;
-    aspect-ratio: 16 / 9;
-}
-
-.game-trailer-frame-wrap iframe {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border: 0;
-}
-
-.game-trailer-editor {
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--detail-line);
-}
-
-.game-trailer-editor .form-label {
-    color: #c7d5e0;
-    font-size: .78rem;
-    font-weight: 600;
-}
-
-.game-trailer-editor .form-control {
-    border-color: var(--detail-line);
-    color: #e5eef5;
-    background: #0e1720;
-}
-
-.game-trailer-editor .form-text,
-.game-trailer-feedback {
-    margin: .35rem 0 0;
-    color: var(--detail-muted);
-    font-size: .72rem;
-}
-
-.game-trailer-feedback:not(:empty) { color: #b7d969; }
-.game-trailer-feedback.is-error { color: #f0a6a6; }
-
 .game-detail-actions {
     display: flex;
     align-items: center;
@@ -1554,74 +1444,6 @@ body {
 }
 
 .game-detail-action:hover { border-color: var(--detail-accent); color: #fff; }
-
-.game-screenshot-viewer {
-    position: fixed;
-    z-index: 1090;
-    inset: 0;
-    display: grid;
-    grid-template-columns: 4rem minmax(0, 1fr) 4rem;
-    align-items: center;
-    justify-items: center;
-    padding: 4rem 1rem 2rem;
-    color: #eaf2f8;
-    background: rgba(4, 9, 14, .97);
-}
-
-.game-screenshot-viewer.d-none { display: none !important; }
-
-.screenshot-viewer-close,
-.screenshot-viewer-arrow {
-    z-index: 1;
-    display: grid;
-    width: 2.8rem;
-    height: 2.8rem;
-    place-items: center;
-    border: 1px solid rgba(199, 213, 224, .2);
-    border-radius: 50%;
-    color: #eaf2f8;
-    background: rgba(23, 35, 48, .88);
-    font-size: 1.1rem;
-}
-
-.screenshot-viewer-close { position: absolute; top: 1rem; right: 1rem; }
-.screenshot-viewer-arrow:hover,
-.screenshot-viewer-close:hover { border-color: #66c0f4; color: #66c0f4; }
-
-.screenshot-viewer-content {
-    display: grid;
-    width: min(100%, 78rem);
-    height: 100%;
-    grid-template-rows: minmax(0, 1fr) auto;
-    justify-items: center;
-    gap: .8rem;
-    margin: 0;
-}
-
-.screenshot-viewer-content img {
-    display: block;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-}
-
-.screenshot-viewer-content figcaption {
-    color: #9cabb8;
-    font-size: .8rem;
-    text-align: center;
-}
-
-@media (max-width: 575.98px) {
-    .game-screenshot-viewer {
-        grid-template-columns: 2.8rem minmax(0, 1fr) 2.8rem;
-        gap: .2rem;
-        padding-inline: .4rem;
-    }
-
-    .screenshot-viewer-arrow,
-    .screenshot-viewer-close { width: 2.35rem; height: 2.35rem; }
-    .game-trailer-source { font-size: .68rem; }
-}
 
 /* Library storefront */
 .library-page {

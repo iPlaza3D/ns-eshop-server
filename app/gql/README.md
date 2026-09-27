@@ -170,7 +170,7 @@ Resolvers use it in two places:
    only the columns the client selected, plus the always-needed `title_id` and
    `source`. A `{titleId, name, bannerUrl, iconUrl}` query SELECTs ~4 columns
    instead of all ~30 — meaningful because some of the unselected ones
-   (`description`, `intro`, `screenshots`, `ratingContent`) are large
+  (`description`, `intro`, `ratingContent`) are large
    text/JSON blobs.
 
 Field names in selection paths are **GraphQL camelCase** (`availableVersions`,
@@ -321,7 +321,7 @@ Implicit AND across populated fields. v1 has no OR / NOT combinators.
   `Title.ownership` does — that stays null, meaning "no library row".
 
 JSON-list columns on `Title` (`category`, `regions`, `languages`,
-`screenshots`, `ratingContent`, `ids`) are stored as JSON-encoded strings in
+`ratingContent`, `ids`) are stored as JSON-encoded strings in
 titledb while the fields they back are decoded `[String!]`. The one of them
 that is filterable, `category`, therefore takes a **`StringListFilter`**
 (`has` / `hasAny` / `hasAll`) rather than a `StringFilter`: the operators name

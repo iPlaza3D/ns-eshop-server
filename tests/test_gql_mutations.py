@@ -161,61 +161,21 @@ def test_a_missing_file_is_refused(library):
 def test_a_title_override_changes_what_the_query_side_reads(library):
     """The write and the read have to agree immediately - the override is projected
     into titles.db, not just stored."""
-    trailer_url = "https://www.nintendo.com/us/store/products/super-mario-odyssey-switch/"
-    record = json.dumps(json.dumps({"name": "Renamed", "trailerUrl": trailer_url}))
+    record = json.dumps(json.dumps({"name": "Renamed", "publisher": "Custom Publisher"}))
     data = mutate(library, f"""
         mutation {{ setTitleOverride(titleId: "{ALPHA}", record: {record})
-            {{ titleId name source trailerUrl }} }}""")
+            {{ titleId name source publisher }} }}""")
 
     assert data["setTitleOverride"]["name"] == "Renamed"
     assert data["setTitleOverride"]["source"] == "custom"
-    assert data["setTitleOverride"]["trailerUrl"] == trailer_url
+    assert data["setTitleOverride"]["publisher"] == "Custom Publisher"
 
     resp = library.client.get("/api/graphql", query_string={"query": """
-        query { title(titleId: "%s") { name trailerUrl } }""" % ALPHA})
+        query { title(titleId: "%s") { name publisher } }""" % ALPHA})
     assert resp.get_json()["data"]["title"] == {
         "name": "Renamed",
-        "trailerUrl": trailer_url,
+        "publisher": "Custom Publisher",
     }
-
-
-def test_setting_or_clearing_a_trailer_preserves_other_custom_metadata(library):
-    mutate(library, """
-        mutation { setTitleOverride(titleId: "%s", record: "{\\"name\\": \\"My Custom Name\\"}")
-            { name } }""" % ALPHA)
-    trailer_url = "https://www.nintendo.com/us/store/products/super-mario-odyssey-switch/"
-
-    saved = mutate(library, f"""
-        mutation {{ setTitleTrailer(titleId: "{ALPHA}", trailerUrl: "{trailer_url}")
-            {{ name trailerUrl }} }}""")['setTitleTrailer']
-    assert saved == {"name": "My Custom Name", "trailerUrl": trailer_url}
-
-    cleared = mutate(library, f"""
-        mutation {{ setTitleTrailer(titleId: "{ALPHA}", trailerUrl: "")
-            {{ name trailerUrl }} }}""")['setTitleTrailer']
-    assert cleared == {"name": "My Custom Name", "trailerUrl": None}
-
-
-def test_title_trailer_rejects_non_https_urls(library):
-    message = mutate(library, """
-        mutation {
-            setTitleTrailer(titleId: "%s", trailerUrl: "http://example.com/trailer") {
-                titleId
-            }
-        }""" % ALPHA, expect_error=True)
-
-    assert "HTTPS" in message
-
-
-def test_title_trailer_rejects_non_nintendo_https_urls(library):
-    message = mutate(library, """
-        mutation {
-            setTitleTrailer(titleId: "%s", trailerUrl: "https://www.youtube.com/watch?v=trailer") {
-                titleId
-            }
-        }""" % ALPHA, expect_error=True)
-
-    assert "official Nintendo" in message
 
 
 def test_deleting_an_override_restores_the_downloaded_value(library):
