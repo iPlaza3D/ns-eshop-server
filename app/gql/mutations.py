@@ -17,7 +17,6 @@ Every resolver delegates; no business logic lives in this module.
 """
 from typing import Optional
 from urllib.parse import urlsplit
-from urllib.parse import urlsplit
 
 import strawberry
 from strawberry.types import Info
@@ -36,6 +35,30 @@ class NotAuthorized(Exception):
 
 class MutationFailed(Exception):
     """A write that was refused on its merits (unknown task, wrong file state)."""
+
+
+_OFFICIAL_NINTENDO_DOMAINS = (
+    'nintendo.com', 'nintendo.co.jp', 'nintendo.co.uk', 'nintendo.com.au',
+    'nintendo.com.br', 'nintendo.com.mx', 'nintendo-europe.com', 'nintendo.eu',
+    'nintendo.es', 'nintendo.fr', 'nintendo.de', 'nintendo.it', 'nintendo.nl',
+    'nintendo.be', 'nintendo.lu', 'nintendo.ch', 'nintendo.at', 'nintendo.pt',
+    'nintendo.pl', 'nintendo.cz', 'nintendo.sk', 'nintendo.hu', 'nintendo.ro',
+    'nintendo.gr', 'nintendo.hr', 'nintendo.si', 'nintendo.se', 'nintendo.dk',
+    'nintendo.no', 'nintendo.fi', 'nintendo.com.hk', 'nintendo.tw', 'nintendo.kr',
+)
+
+
+def _is_official_nintendo_url(value: str) -> bool:
+    try:
+        parsed = urlsplit(value)
+        hostname = (parsed.hostname or '').lower().rstrip('.')
+        port = parsed.port
+    except ValueError:
+        return False
+    if parsed.scheme != 'https' or parsed.username or parsed.password or port not in (None, 443):
+        return False
+    return any(hostname == domain or hostname.endswith(f'.{domain}')
+               for domain in _OFFICIAL_NINTENDO_DOMAINS)
 
 
 def _require_admin(ctx) -> None:
@@ -233,38 +256,15 @@ class Mutation:
         title_id: Annotated[strawberry.ID, strawberry.argument(
             description="The 16-hex-digit title id to update.")],
         trailer_url: Annotated[Optional[str], strawberry.argument(
-            description="HTTPS URL of an official trailer. Empty clears this field.")],
+            description="HTTPS URL of an official Nintendo page. Empty clears this field.")],
     ) -> Optional[Title]:
-        """Set only the official trailer URL, preserving other custom metadata."""
+        """Set only the official Nintendo trailer-page URL, preserving other custom metadata."""
         import titledb
         _require_admin(info.context)
         normalized_url = (trailer_url or '').strip()
         if normalized_url:
-            parsed = urlsplit(normalized_url)
-            if parsed.scheme != 'https' or not parsed.hostname:
-                raise MutationFailed("Trailer URL must be a valid HTTPS URL.")
-        ok, err = titledb.store.set_override_field(
-            str(title_id), 'trailerUrl', normalized_url or None)
-        if not ok:
-            raise MutationFailed(err)
-        return resolve_title(str(title_id), info.context, info)
-
-    @described_mutation
-    def set_title_trailer(
-        self, info: Info,
-        title_id: Annotated[strawberry.ID, strawberry.argument(
-            description="The 16-hex-digit title id to update.")],
-        trailer_url: Annotated[Optional[str], strawberry.argument(
-            description="HTTPS URL of an official trailer. Empty clears this field.")],
-    ) -> Optional[Title]:
-        """Set only the official trailer URL, preserving the title's other custom metadata."""
-        import titledb
-        _require_admin(info.context)
-        normalized_url = (trailer_url or '').strip()
-        if normalized_url:
-            parsed = urlsplit(normalized_url)
-            if parsed.scheme != 'https' or not parsed.hostname:
-                raise MutationFailed("Trailer URL must be a valid HTTPS URL.")
+            if not _is_official_nintendo_url(normalized_url):
+                raise MutationFailed("Trailer URL must be an HTTPS page on an official Nintendo domain.")
         ok, err = titledb.store.set_override_field(
             str(title_id), 'trailerUrl', normalized_url or None)
         if not ok:

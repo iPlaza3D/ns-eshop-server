@@ -1622,3 +1622,289 @@ body {
     .screenshot-viewer-close { width: 2.35rem; height: 2.35rem; }
     .game-trailer-source { font-size: .68rem; }
 }
+
+/* Library storefront */
+.library-page {
+    --shelf-card-width: 16rem;
+}
+
+.featured-game {
+    position: relative;
+    min-height: 27rem;
+    margin: 1.5rem 0 2.8rem;
+    overflow: hidden;
+    border: 1px solid rgba(102, 192, 244, .15);
+    border-radius: 7px;
+    background: linear-gradient(115deg, #203c56, #101820 78%);
+    isolation: isolate;
+}
+
+.featured-game-banner,
+.featured-game-shade {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.featured-game-banner {
+    object-fit: cover;
+    object-position: center 35%;
+}
+
+.featured-game-shade {
+    background: linear-gradient(90deg, rgba(8, 16, 24, .95), rgba(8, 16, 24, .55) 48%, rgba(8, 16, 24, .05) 100%),
+        linear-gradient(0deg, rgba(8, 16, 24, .88), transparent 58%);
+}
+
+.featured-game-copy {
+    display: flex;
+    width: min(100%, 48rem);
+    min-height: 27rem;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 2.3rem clamp(1.25rem, 5vw, 4rem);
+}
+
+.featured-game-eyebrow,
+.shelf-kicker {
+    margin: 0 0 .45rem;
+    color: #8bd5ff;
+    font-size: .69rem;
+    font-weight: 700;
+}
+
+.featured-game-copy h2 {
+    max-width: 40rem;
+    margin: 0 0 .55rem;
+    color: #fff;
+    font-family: Bahnschrift, "Aptos Display", sans-serif;
+    font-size: 2.2rem;
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, .42);
+}
+
+.featured-game-copy > p:not(.featured-game-eyebrow) {
+    margin: 0 0 1rem;
+    color: #bdcbd6;
+}
+
+.featured-game-actions {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+}
+
+.featured-game-actions .btn-primary {
+    --bs-btn-color: #10202b;
+    --bs-btn-bg: #66c0f4;
+    --bs-btn-border-color: #66c0f4;
+    --bs-btn-hover-color: #10202b;
+    --bs-btn-hover-bg: #8bd5ff;
+    --bs-btn-hover-border-color: #8bd5ff;
+    font-weight: 700;
+}
+
+.featured-game-actions .btn-outline-light {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    padding: 0;
+}
+
+.featured-game-actions .btn-outline-light[aria-pressed="true"] {
+    border-color: #ffe28a;
+    color: #ffe28a;
+    background: rgba(63, 55, 35, .65);
+}
+
+.library-shelves {
+    display: grid;
+    gap: 2rem;
+    margin-top: 1.8rem;
+}
+
+.library-shelf {
+    min-width: 0;
+}
+
+.shelf-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .7rem;
+}
+
+.shelf-kicker {
+    margin-bottom: .25rem;
+    color: #8f9ca8;
+}
+
+.shelf-heading h2 {
+    margin: 0;
+    color: #eaf2f8;
+    font-family: Bahnschrift, "Aptos Display", sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.shelf-actions {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.shelf-count {
+    margin-right: .25rem;
+    color: #8f9ca8;
+    font-size: .78rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.shelf-arrow {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border: 1px solid rgba(102, 192, 244, .2);
+    border-radius: 4px;
+    color: #c7d5e0;
+    background: #172330;
+}
+
+.shelf-arrow:hover:not(:disabled) {
+    border-color: #66c0f4;
+    color: #66c0f4;
+    background: #203448;
+}
+
+.shelf-track {
+    display: grid;
+    grid-auto-columns: var(--shelf-card-width);
+    grid-auto-flow: column;
+    gap: .75rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding: .15rem .1rem .8rem;
+    scrollbar-color: #355269 transparent;
+    scrollbar-width: thin;
+    scroll-snap-type: inline mandatory;
+}
+
+.shelf-game {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid rgba(102, 192, 244, .13);
+    border-radius: 5px;
+    color: #dce6ee;
+    background: #121c27;
+    text-align: left;
+    scroll-snap-align: start;
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.shelf-game:hover {
+    z-index: 1;
+    transform: translateY(-3px) scale(1.015);
+    border-color: rgba(102, 192, 244, .62);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .35);
+}
+
+.shelf-game-art {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: linear-gradient(135deg, #203c56, #101820);
+}
+
+.shelf-game-label {
+    display: grid;
+    min-height: 3.75rem;
+    gap: .22rem;
+    align-content: center;
+    padding: .55rem .65rem;
+    background: linear-gradient(180deg, #172330, #121c27);
+}
+
+.shelf-game-label strong {
+    overflow: hidden;
+    color: #eaf2f8;
+    font-size: .84rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.shelf-game-label > span {
+    overflow: hidden;
+    color: #8f9ca8;
+    font-size: .7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.shelf-track.is-icon-view {
+    grid-auto-columns: calc(var(--shelf-card-width) * .72);
+}
+
+.shelf-track.is-icon-view .shelf-game-art {
+    aspect-ratio: 1;
+    object-fit: contain;
+    padding: .6rem;
+}
+
+.filtered-results {
+    margin-top: 2rem;
+}
+
+.filtered-results .grid-container {
+    padding: .5rem 0;
+}
+
+.library-empty-state {
+    display: grid;
+    min-height: 15rem;
+    justify-items: center;
+    align-content: center;
+    gap: .55rem;
+    color: #9cabb8;
+    text-align: center;
+}
+
+.library-empty-state i {
+    color: #66c0f4;
+    font-size: 2rem;
+}
+
+.library-empty-state h2 {
+    margin: 0;
+    color: #eaf2f8;
+    font-size: 1.2rem;
+}
+
+.library-empty-state p {
+    max-width: 34rem;
+    margin: 0;
+    font-size: .9rem;
+}
+
+@media (max-width: 767.98px) {
+    .featured-game,
+    .featured-game-copy { min-height: 21rem; }
+
+    .featured-game-copy h2 { font-size: 1.7rem; }
+    .shelf-heading h2 { font-size: 1.05rem; }
+    .shelf-actions .shelf-count { display: none; }
+    .shelf-track { gap: .55rem; }
+    .library-shelves { gap: 1.5rem; }
+}
