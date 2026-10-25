@@ -296,18 +296,27 @@ def interval_string_to_timedelta(interval_str: str) -> Optional[timedelta]:
 
 def delete_empty_folders(path):
     """
-    Recursively deletes empty folders starting from the given path.
-    Considers folders containing only hidden files as empty.
+    Recursively deletes empty subfolders below the given library root.
+
+    The root itself is deliberately never removed, even when it is empty. Files
+    whose names start with a dot are real filesystem entries and therefore keep
+    their containing directory; removing them would be data loss.
     """
-    if not os.path.isdir(path):
+    root = os.path.abspath(path)
+    if not os.path.isdir(root):
         return
 
-    # Loop until no more empty directories are found and deleted in a pass
+    # os.walk reports parents before/after their children depending on the
+    # backend, so repeat until no nested directory can be removed. Never include
+    # root in the deletion candidates.
     while True:
         deleted_any_in_pass = False
-        # Traverse from bottom up to ensure child empty folders are deleted first
-        for dirpath, dirnames, filenames in os.walk(path, topdown=False):
-            # Check if the directory is truly empty (no subdirectories and no files)
+        for dirpath, dirnames, filenames in os.walk(root, topdown=False):
+            if os.path.abspath(dirpath) == root:
+                continue
+
+            # Hidden files are intentionally included in filenames: a folder is
+            # removable only when it is genuinely empty.
             if not dirnames and not filenames:
                 try:
                     os.rmdir(dirpath)
@@ -316,18 +325,8 @@ def delete_empty_folders(path):
                 except OSError as e:
                     logging.getLogger('main').error(f"Error deleting directory {dirpath}: {e}")
 
-        # After a full pass, check if the root path itself is now empty and can be deleted
-        # This handles cases where the initial 'path' becomes empty after its children are removed
-        if not os.listdir(path) and os.path.isdir(path):
-            try:
-                os.rmdir(path)
-                logging.getLogger('main').debug(f"Deleted empty root directory: {path}")
-                deleted_any_in_pass = True
-            except OSError as e:
-                logging.getLogger('main').error(f"Error deleting root directory {path}: {e}")
-
         if not deleted_any_in_pass:
-            break # No more empty directories found in this pass, so we are done
+            break
 
 
 def replace_char(c, restricted_chars, control_chars):

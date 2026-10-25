@@ -15,6 +15,7 @@ from constants import (
 import utils
 from library import prepare_template_names
 from utils import sanitize_filename, sanitized_path_parts, truncate_path_parts
+from utils import delete_empty_folders
 
 SANITIZE_CASES = [
     # name, windows, expected
@@ -187,3 +188,27 @@ def test_truncate_shrinks_directories_before_starving_the_filename():
     result = truncate_path_parts(list(parts), 10)
     assert len(result[0]) < MAX_PART_WINDOWS
     assert len(os.path.splitext(result[-1])[0]) >= MIN_PART_WINDOWS
+
+
+def test_delete_empty_folders_preserves_library_root(tmp_path):
+    root = tmp_path / 'library'
+    nested = root / 'Title' / 'Updates'
+    nested.mkdir(parents=True)
+
+    delete_empty_folders(str(root))
+
+    assert root.is_dir()
+    assert not (root / 'Title').exists()
+
+
+def test_delete_empty_folders_preserves_hidden_files(tmp_path):
+    root = tmp_path / 'library'
+    nested = root / 'Title'
+    nested.mkdir(parents=True)
+    (nested / '.DS_Store').write_bytes(b'metadata')
+
+    delete_empty_folders(str(root))
+
+    assert root.is_dir()
+    assert nested.is_dir()
+    assert (nested / '.DS_Store').is_file()

@@ -103,7 +103,9 @@ def organize_file(file_obj, library_path, organizer_settings):
                 if os.path.exists(candidate):
                     raise FileExistsError(candidate)
                 shutil.move(src, candidate)
-                update_file_path(library_path_str, current_filepath, candidate)
+                # `src` is the path that was actually moved. It can differ from
+                # `current_filepath` after a previous collision retry.
+                update_file_path(library_path_str, src, candidate)
                 rel = os.path.relpath(candidate, library_path_str)
                 logger.info(f'Organizing file: {original_filename} → {rel}')
                 return True
@@ -297,15 +299,19 @@ def remove_outdated_update_files():
                                             add_ignored_event(file_obj.filepath, '')
                                             os.remove(file_obj.filepath)
                                             logger.debug(f"Deleted physical file: {file_obj.filepath}")
-                                            # Remove from database and update app owned status
-                                            # This function handles db.session.delete(file_obj) and app.owned status
-                                            remove_file_from_apps(file_obj.id)
+                                            # Remove the Files row as well as its app
+                                            # associations; otherwise the next scan can
+                                            # resurrect a stale database entry.
+                                            delete_file_by_filepath(file_obj.filepath)
                                         except OSError as e:
                                             logger.error(f"Error deleting physical file {file_obj.filepath}: {e}")
                                             # If an error occurs, remove from the ignored list
                                             pop_ignored_event(src_path=file_obj.filepath, dest_path='')
                                     else:
                                         logger.warning(f"Physical file not found for deletion: {file_obj.filepath}")
+                                        # Keep the database consistent even when the
+                                        # physical file was already removed manually.
+                                        delete_file_by_filepath(file_obj.filepath)
                                     
         logger.info(f"Finished removal of outdated update files.")
     except Exception as e:
