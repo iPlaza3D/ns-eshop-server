@@ -159,3 +159,9 @@ def test_sphaira_download_fields_resolve_to_existing_file(shop_app):
     download = shop_app.client.get(app["downloadUrl"])
     assert download.status_code == 200
     assert len(download.data) == 4096
+
+    ranged_download = shop_app.client.get(
+        app["downloadUrl"], headers={"Range": "bytes=0-15"})
+    assert ranged_download.status_code == 206
+    assert ranged_download.headers["Content-Range"] == "bytes 0-15/4096"
+    assert len(ranged_download.data) == 16
