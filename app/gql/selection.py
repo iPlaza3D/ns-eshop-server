@@ -37,7 +37,8 @@ class Selection:
         return any(f.name == name for f in self._fields)
 
     def child(self, name: str) -> "Selection":
-        for f in self._fields:
-            if f.name == name:
-                return Selection(_expand(f.selections))
-        return Selection([])
+        return Selection(
+            child
+            for field in self._fields if field.name == name
+            for child in _expand(field.selections)
+        )

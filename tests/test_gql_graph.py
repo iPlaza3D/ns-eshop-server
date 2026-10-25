@@ -28,8 +28,11 @@ ALPHA_DLC = ALPHA[:-4] + "1001"
 # The update app deliberately has no titledb row of its own - that is the normal case
 # for updates, and it is what makes `App.title` the only way to name the game.
 TITLEDB_JSON = {
-    ALPHA:     {"id": ALPHA, "name": "Alpha Game", "publisher": "Nintendo"},
-    ALPHA_DLC: {"id": ALPHA_DLC, "name": "Alpha Extra Levels"},
+    ALPHA:     {"id": ALPHA, "name": "Alpha Game", "publisher": "Nintendo",
+                "iconUrl": "https://cdn.example/alpha-icon.jpg",
+                "bannerUrl": "https://cdn.example/alpha-banner.jpg"},
+    ALPHA_DLC: {"id": ALPHA_DLC, "name": "Alpha Extra Levels",
+                "bannerUrl": "https://cdn.example/dlc-banner.jpg"},
 }
 
 # (app_id, type, version, owned, filename or None, size)
@@ -119,6 +122,56 @@ def test_a_titles_apps_carry_their_versions(library):
 
     base = data["title"]["apps"][0]
     assert [(v["version"], v["owned"]) for v in base["versions"]] == EXPECTED_BASE_VERSIONS
+
+
+def test_sphaira_art_fields_load_their_titledb_columns(library):
+    cards = query(library, """
+        query { apps(owned: true, appType: [BASE], groupByAppId: true,
+                     page: 1, pageSize: 10) {
+            items { titledb {
+                icon(size: THUMB) { url local }
+                banner(size: THUMB) { url local }
+            } }
+        } }""")["apps"]["items"]
+    assert cards[0]["titledb"]["icon"] == {
+        "url": "https://cdn.example/alpha-icon.jpg", "local": False}
+    assert cards[0]["titledb"]["banner"] == {
+        "url": "https://cdn.example/alpha-banner.jpg", "local": False}
+
+    detail = query(library, """
+        query { title(titleId: "%s") {
+            banner(size: CLIENT) { url local }
+            fullBanner: banner(size: SCREEN) { url local }
+        } }""" % ALPHA)["title"]
+    assert detail["banner"]["url"] == "https://cdn.example/alpha-banner.jpg"
+    assert detail["fullBanner"]["url"] == "https://cdn.example/alpha-banner.jpg"
+
+
+def test_sphaira_title_aliases_hydrate_each_content_type(library):
+    title = query(library, """
+        query { title(titleId: "%s") {
+            base: apps(owned: true, appType: [BASE]) {
+                appId downloadUrl
+            }
+            updates: apps(owned: true, appType: [UPDATE]) {
+                appVersion downloadUrl
+            }
+            dlc: apps(owned: true, appType: [DLC]) {
+                appId downloadUrl titledb {
+                    name banner(size: THUMB) { url local }
+                }
+            }
+        } }""" % ALPHA)["title"]
+
+    assert title["base"][0]["appId"] == ALPHA
+    assert title["base"][0]["downloadUrl"] == "/api/get_game/1"
+    assert title["updates"][0]["appVersion"] == 65536
+    assert title["updates"][0]["downloadUrl"] == "/api/get_game/2"
+    assert title["dlc"][0]["appId"] == ALPHA_DLC
+    assert title["dlc"][0]["downloadUrl"] == "/api/get_game/3"
+    assert title["dlc"][0]["titledb"]["name"] == "Alpha Extra Levels"
+    assert title["dlc"][0]["titledb"]["banner"]["url"] == \
+        "https://cdn.example/dlc-banner.jpg"
 
 
 def test_the_titles_list_carries_versions_too(library):

@@ -38,7 +38,9 @@ class UnknownTaskName(Exception):
 # title in the page.
 _TITLE_COL_MAP = {
     'name':            'td.name AS name',
+    'banner':          'td.banner_url AS banner_url',
     'bannerUrl':       'td.banner_url AS banner_url',
+    'icon':            'td.icon_url AS icon_url',
     'iconUrl':         'td.icon_url AS icon_url',
     'frontBoxArt':     'td.front_box_art AS front_box_art',
     'description':     'td.description AS description',
