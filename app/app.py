@@ -364,17 +364,6 @@ def get_settings_api():
             if 'hauth' in client_settings:
                 # Replace hauth dict with empty dict to keep it private
                 settings['shop']['clients'][client_name]['hauth'] = {}
-    # Never expose service credentials through the settings API.
-    downloads = settings.get('downloads', {})
-    for service in ('jackett', 'download_station'):
-        if isinstance(downloads.get(service), dict):
-            if service == 'jackett':
-                downloads[service]['api_key'] = ''
-            else:
-                downloads[service]['password'] = ''
-                downloads[service]['password_configured'] = bool(
-                    get_settings().get('downloads', {}).get(service, {}).get('password')
-                )
     return jsonify(settings)
 
 @app.post('/api/settings/titles')
@@ -418,13 +407,6 @@ def set_shop_settings_api():
         'errors': []
     } 
     return jsonify(resp)
-
-@app.post('/api/settings/downloads')
-@access_required('admin')
-def set_download_settings_api():
-    data = request.json or {}
-    set_download_settings(data)
-    return jsonify({'success': True, 'errors': []})
 
 @app.route('/api/settings/library/paths', methods=['GET', 'POST', 'DELETE'])
 @access_required('admin')

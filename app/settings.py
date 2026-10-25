@@ -334,20 +334,6 @@ def set_shop_settings(data):
             for client_name, client_data in data['clients'].items():
                 settings['shop']['clients'][client_name].update(client_data)
 
-def set_download_settings(data):
-    """Persist Jackett and Synology Download Station connection settings."""
-    with settings_transaction() as settings:
-        downloads = settings.setdefault('downloads', {})
-        for service in ('jackett', 'download_station'):
-            service_data = data.get(service)
-            if isinstance(service_data, dict):
-                target = downloads.setdefault(service, {})
-                for key, value in service_data.items():
-                    # An empty secret in the form means keep the stored value.
-                    if key in ('api_key', 'password') and value == '':
-                        continue
-                    target[key] = value
-
 def get_server_uid():
     """Return the stable identity assigned to this server installation."""
     return get_settings()['server']['uid']

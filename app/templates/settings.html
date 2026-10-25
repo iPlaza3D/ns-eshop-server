@@ -504,52 +504,6 @@
                         onClick='submitShopSettings()'>Submit</button>
                 </div>
 
-                <hr class="hr-settings">
-                <h2 class="pb-2">Downloads</h2>
-                <p>Configure the services used by the administrator to search and send downloads to Download Station.</p>
-
-                <h4 class="pt-2 pb-2">Jackett</h4>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="jackettEnabledCheck">
-                    <label class="form-check-label" for="jackettEnabledCheck">Enable Jackett searches</label>
-                </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label for="jackettUrlInput" class="form-label">Jackett URL</label>
-                        <input type="url" class="form-control" id="jackettUrlInput" placeholder="http://jackett:9117">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="jackettApiKeyInput" class="form-label">API key</label>
-                        <input type="password" class="form-control" id="jackettApiKeyInput" autocomplete="new-password">
-                        <div class="form-text">Leave blank to keep the current key.</div>
-                    </div>
-                </div>
-
-                <h4 class="pt-2 pb-2">Synology Download Station</h4>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="downloadStationEnabledCheck">
-                    <label class="form-check-label" for="downloadStationEnabledCheck">Enable Download Station</label>
-                </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label for="downloadStationUrlInput" class="form-label">Download Station URL</label>
-                        <input type="url" class="form-control" id="downloadStationUrlInput" placeholder="http://xpenology:5000">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="downloadStationUsernameInput" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="downloadStationUsernameInput" autocomplete="username">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="downloadStationPasswordInput" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="downloadStationPasswordInput" autocomplete="new-password">
-                        <div class="form-text">Leave blank to keep the current password.</div>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <button type="button" id="submitDownloadSettingsBtn" class="btn btn-primary"
-                        onClick='submitDownloadSettings()'>Save download settings</button>
-                </div>
-
                 
                 <hr class="hr-settings">
                 <h2 class="pb-2">Scheduler</h2>
@@ -1261,40 +1215,6 @@
         });
     }
 
-    function submitDownloadSettings() {
-        $('#submitDownloadSettingsBtn').prop('disabled', true);
-        const data = {
-            jackett: {
-                enabled: getCheckboxStatus('jackettEnabledCheck'),
-                url: $('#jackettUrlInput').val().trim(),
-                api_key: $('#jackettApiKeyInput').val()
-            },
-            download_station: {
-                enabled: getCheckboxStatus('downloadStationEnabledCheck'),
-                url: $('#downloadStationUrlInput').val().trim(),
-                username: $('#downloadStationUsernameInput').val().trim(),
-                password: $('#downloadStationPasswordInput').val()
-            }
-        };
-
-        $.ajax({
-            url: '/api/settings/downloads',
-            type: 'POST',
-            data: JSON.stringify(data),
-            contentType: 'application/json',
-            success: function (result) {
-                if (result.success) {
-                    $('#jackettApiKeyInput').val('');
-                    $('#downloadStationPasswordInput').val('');
-                }
-                $('#submitDownloadSettingsBtn').prop('disabled', false);
-            },
-            error: function () {
-                $('#submitDownloadSettingsBtn').prop('disabled', false);
-            }
-        });
-    }
-
     function submitLibraryManagementSettings() {
         $('#submitLibraryManagementSettingsBtn').prop('disabled', true);
         data = {
@@ -1536,16 +1456,6 @@
                     $("#cyberfoilEnabledCheck").prop("checked", cyberfoilSettings['enabled']);
                 }
             }
-
-            // Download integrations
-            const downloadSettings = result['downloads'] || {};
-            const jackett = downloadSettings['jackett'] || {};
-            $('#jackettEnabledCheck').prop('checked', !!jackett['enabled']);
-            setInputVal('jackettUrlInput', jackett['url'] || '');
-            const downloadStation = downloadSettings['download_station'] || {};
-            $('#downloadStationEnabledCheck').prop('checked', !!downloadStation['enabled']);
-            setInputVal('downloadStationUrlInput', downloadStation['url'] || '');
-            setInputVal('downloadStationUsernameInput', downloadStation['username'] || '');
         });
 
     });
