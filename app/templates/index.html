@@ -233,15 +233,6 @@
                             </button>
                             <span id="copyTitleIdFeedback" class="game-detail-muted" aria-live="polite"></span>
                         </div>
-                        {% if current_user.is_authenticated and current_user.has_admin_access() %}
-                        <div class="game-detail-actions">
-                            <button type="button" id="searchDownloadsBtn" class="game-detail-action" onclick="searchDownloads()">
-                                <i class="bi bi-search" aria-hidden="true"></i><span>Search downloads</span>
-                            </button>
-                            <span id="downloadSearchFeedback" class="game-detail-muted" aria-live="polite"></span>
-                        </div>
-                        <div id="downloadSearchResults" class="game-detail-downloads d-none"></div>
-                        {% endif %}
 
                         <section class="game-detail-section game-detail-ownership" aria-labelledby="gameOwnershipHeading">
                             <h3 id="gameOwnershipHeading">Your library</h3>
@@ -999,63 +990,6 @@
             const errorBox = document.getElementById('gameDetailError');
             errorBox.textContent = error.message || detailText('Unable to load game details.', 'Unable to load game details.');
             errorBox.classList.remove('d-none');
-        }
-    }
-
-    async function searchDownloads() {
-        const button = document.getElementById('searchDownloadsBtn');
-        const results = document.getElementById('downloadSearchResults');
-        const feedback = document.getElementById('downloadSearchFeedback');
-        const query = document.getElementById('gameDetailTitle').textContent.trim();
-        if (!button || !results || !query) return;
-        button.disabled = true;
-        feedback.textContent = 'Searching Jackett...';
-        results.classList.remove('d-none');
-        results.replaceChildren();
-        try {
-            const response = await fetch(`/api/downloads/search?q=${encodeURIComponent(query)}`);
-            const payload = await response.json();
-            if (!response.ok || !payload.success) throw new Error(payload.error || 'Jackett search failed.');
-            if (!payload.results.length) {
-                results.textContent = 'No results found.';
-            } else {
-                payload.results.forEach(result => {
-                    const row = document.createElement('div');
-                    row.className = 'game-download-result';
-                    const title = document.createElement('span');
-                    title.textContent = result.title;
-                    const add = document.createElement('button');
-                    add.type = 'button';
-                    add.className = 'btn btn-sm btn-primary';
-                    add.textContent = 'Add';
-                    add.onclick = () => addDownloadTask(result.uri, result.title, add);
-                    row.append(title, add);
-                    results.appendChild(row);
-                });
-            }
-            feedback.textContent = `${payload.results.length} result(s)`;
-        } catch (error) {
-            feedback.textContent = error.message;
-        } finally {
-            button.disabled = false;
-        }
-    }
-
-    async function addDownloadTask(uri, title, button) {
-        button.disabled = true;
-        try {
-            const response = await fetch('/api/downloads/add', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({uri})
-            });
-            const payload = await response.json();
-            if (!response.ok || !payload.success) throw new Error(payload.error || 'Download Station failed.');
-            button.textContent = 'Added';
-            document.getElementById('downloadSearchFeedback').textContent = `Added: ${title}`;
-        } catch (error) {
-            button.disabled = false;
-            document.getElementById('downloadSearchFeedback').textContent = error.message;
         }
     }
 

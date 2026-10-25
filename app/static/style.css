@@ -1916,24 +1916,3 @@ body {
 .game-details-modal .modal-content { color: var(--eshop-ink); background: #fff; }
 .game-detail-body { background: #fff; }
 .game-detail-section h3, .game-detail-section-heading h3, .game-detail-hero-copy h2 { color: var(--eshop-ink); }
-.game-detail-downloads {
-    display: grid;
-    gap: .5rem;
-    margin-top: .75rem;
-}
-
-.game-download-result {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: .75rem;
-    padding: .65rem .75rem;
-    border: 1px solid var(--library-line, rgba(255, 255, 255, .12));
-    border-radius: .5rem;
-    font-size: .85rem;
-}
-
-.game-download-result span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
