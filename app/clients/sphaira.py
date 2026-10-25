@@ -1,7 +1,9 @@
 """
 Sphaira client implementation.
 """
+from html import escape
 import os
+from urllib.parse import quote
 
 from flask import Request, Response, request, send_from_directory
 
@@ -127,12 +129,15 @@ class SphairaClient(BaseClient):
     def _serve_directory_listing(self, content: list[str] | str) -> Response:
         """Serve a Sphaira compatible directory listing."""
         if not content:
-            content = '<a href="No content available."> </a>'
-        elif isinstance(content, list):
-            content = '\n'.join(f'<a href="{item}"> </a>' for item in content)
-        else:
-            content = f'<a href="{content}"> </a>'
-        html = SPHAIRA_HTML_TEMPLATE.format(content)
+            content = ['No content available.']
+        elif isinstance(content, str):
+            content = [content]
+
+        links = '\n'.join(
+            f'<a href="{escape(quote(item, safe="/"), quote=True)}">{escape(item)}</a>'
+            for item in content
+        )
+        html = SPHAIRA_HTML_TEMPLATE.format(links)
         return Response(html)
 
     def _serve_file(self, filename: str) -> Response: 

@@ -10,10 +10,12 @@ What a client cannot vary from hardware is varied here on top of the captured he
 content filters, host verification over HTTPS, refusals on the download route.
 """
 import base64
+from html import unescape
 import json
 import os
 import re
 from collections import namedtuple
+from urllib.parse import unquote
 
 import pytest
 
@@ -113,7 +115,8 @@ def listed(response):
     links, one per entry of the directory being browsed.
     """
     if response.mimetype == "text/html":
-        return sorted(re.findall(r'<a href="([^"]*)">', response.get_data(as_text=True)))
+        return sorted(unquote(unescape(href)) for href in
+                      re.findall(r'<a href="([^"]*)">', response.get_data(as_text=True)))
     return sorted(entry["url"].split("#", 1)[1] for entry in response.get_json()["files"])
 
 
@@ -134,11 +137,15 @@ def is_error(response):
 
 
 def body_matches(exchange, response):
-    """Whether a response is the one that was recorded, json shop or html listing."""
+    """Whether a response serves the recorded shop data in a client-readable format."""
     body = exchange["response"]["body"]
     if body["kind"] == "json":
         return response.get_json() == body["json"]
-    return response.get_data(as_text=True) == body["text"]
+    links = re.findall(r'<a href="([^"]*)">(.*?)</a>',
+                       response.get_data(as_text=True), re.DOTALL)
+    recorded_links = re.findall(r'<a href="([^"]*)">.*?</a>', body["text"], re.DOTALL)
+    return sorted(unescape(label).strip() for _, label in links) == \
+        sorted(unquote(href) for href in recorded_links)
 
 
 def count(shop, filename):
@@ -315,6 +322,14 @@ def test_a_recorded_shop_response_replays_exactly(shop, client, name, index):
     exchange, response = play(shop, client, name, index=index)
     assert response.status_code == exchange["response"]["status"]
     assert body_matches(exchange, response)
+
+
+def test_sphaira_directory_links_include_safe_display_names():
+    response = SphairaClient({})._serve_directory_listing(["A & <Game>#/"])
+
+    assert response.mimetype == "text/html"
+    assert '<a href="A%20%26%20%3CGame%3E%23/">A &amp; &lt;Game&gt;#/</a>' \
+        in response.get_data(as_text=True)
 
 
 FILTERS = {
