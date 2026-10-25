@@ -17,12 +17,14 @@ from auth import *
 from utils import *
 from library import *
 import json
+import requests
 import tasks as tasks_mod
 import realtime
 import titledb
 import os
 from clients import CyberFoilClient, TinfoilClient, SphairaClient
 import discovery
+from download_services import DownloadServiceError, add_to_download_station, search_jackett
 
 def init():
     global watcher
@@ -425,6 +427,35 @@ def set_download_settings_api():
     data = request.json or {}
     set_download_settings(data)
     return jsonify({'success': True, 'errors': []})
+
+@app.get('/api/downloads/search')
+@access_required('admin')
+def search_downloads_api():
+    try:
+        return jsonify({'success': True, 'results': search_jackett(request.args.get('q', ''))})
+    except DownloadServiceError as error:
+        return jsonify({'success': False, 'error': str(error)}), 400
+    except requests.RequestException:
+        logger.exception('Jackett search failed')
+        return jsonify({'success': False, 'error': 'Jackett could not be reached.'}), 502
+    except (ValueError, KeyError):
+        logger.exception('Jackett returned an invalid response')
+        return jsonify({'success': False, 'error': 'Jackett returned an invalid response.'}), 502
+
+@app.post('/api/downloads/add')
+@access_required('admin')
+def add_download_api():
+    data = request.json or {}
+    try:
+        return jsonify({'success': True, 'task': add_to_download_station(data.get('uri', ''))})
+    except DownloadServiceError as error:
+        return jsonify({'success': False, 'error': str(error)}), 400
+    except requests.RequestException:
+        logger.exception('Download Station request failed')
+        return jsonify({'success': False, 'error': 'Download Station could not be reached.'}), 502
+    except (ValueError, KeyError):
+        logger.exception('Download Station returned an invalid response')
+        return jsonify({'success': False, 'error': 'Download Station returned an invalid response.'}), 502
 
 @app.route('/api/settings/library/paths', methods=['GET', 'POST', 'DELETE'])
 @access_required('admin')
