@@ -1,9 +1,11 @@
 from constants import *
 from utils import *
 import yaml
+import copy
 import os, sys, tempfile
 import threading
 import hashlib
+import uuid
 from contextlib import contextmanager
 
 from nsz.nut import Keys
@@ -208,7 +210,14 @@ def load_settings():
                 settings_updated = True
 
         else:
-            settings = DEFAULT_SETTINGS
+            settings = copy.deepcopy(DEFAULT_SETTINGS)
+            settings_updated = True
+
+        if not isinstance(settings.get('server'), dict):
+            settings['server'] = {}
+            settings_updated = True
+        if not settings['server']['uid']:
+            settings['server']['uid'] = uuid.uuid4().hex
             settings_updated = True
 
         if settings_updated:
@@ -317,13 +326,17 @@ def set_shop_settings(data):
         if 'host' in data and '://' in data['host']:
             data['host'] = data['host'].split('://')[-1]
         # Update shop-level settings
-        for key in ['host', 'motd', 'public']:
+        for key in ['name', 'host', 'motd', 'public']:
             if key in data:
                 settings['shop'][key] = data[key]
         # Update client-specific settings
         if 'clients' in data:
             for client_name, client_data in data['clients'].items():
                 settings['shop']['clients'][client_name].update(client_data)
+
+def get_server_uid():
+    """Return the stable identity assigned to this server installation."""
+    return get_settings()['server']['uid']
 
 def set_scheduler_settings(data):
     with settings_transaction() as settings:

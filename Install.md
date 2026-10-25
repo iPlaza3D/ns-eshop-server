@@ -21,7 +21,7 @@ Ownfoil is shipped as a docker container for easy deployment, data persistency a
 
 Running this command will start the shop on local port `8465` with the library in `/your/game/directory`, and persist the `data` and `config` directories:
 ```
-docker run -d -p 8465:8465 \
+docker run -d -p 8465:8465 -p 8465:8465/udp \
    -v /your/game/directory:/games \
    -v ./config:/app/config \
    -v ./data:/app/data \
@@ -60,6 +60,7 @@ services:
       - ./config:/app/config
     ports:
       - "8465:8465"
+      - "8465:8465/udp"
 ```
 
 You can then create and start the container with the command (executed in the same directory as the docker-compose file):
@@ -68,6 +69,8 @@ You can then create and start the container with the command (executed in the sa
 
 This is usefull if you don't want to remember the `docker run` command and have a persistent and reproductible container configuration.
 </details>
+
+Sphaira's automatic Ownfoil search uses UDP on port `8465`. Keep the TCP and UDP host ports the same and reachable from the Switch. Some bridged container networks do not forward LAN broadcasts; if discovery still fails, use host networking or configure the server manually in Sphaira.
 
 ## Volumes
 

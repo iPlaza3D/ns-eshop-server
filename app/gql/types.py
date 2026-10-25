@@ -12,8 +12,10 @@ import strawberry
 from strawberry import Private
 from typing import List, Optional
 from typing_extensions import Annotated
+from sqlalchemy import Integer, cast
 
-from db import verification_status
+from constants import APP_TYPE_BASE, APP_TYPE_UPD
+from db import Apps as DbApp, Files as DbFile, Titles as DbTitle, app_files, db, verification_status
 
 from .docs import arg, desc, described, described_field
 from .filters import (
@@ -46,6 +48,26 @@ def decode_json_list(value) -> Optional[List[str]]:
     if isinstance(decoded, list):
         return [str(x) for x in decoded]
     return None
+
+
+@described(strawberry.enum)
+class ImageSize(Enum):
+    CLIENT = strawberry.enum_value(
+        "CLIENT", description="Artwork sized for display in the client.")
+    SCREEN = strawberry.enum_value(
+        "SCREEN", description="Full-size artwork suitable for a screenshot view.")
+    THUMB = strawberry.enum_value(
+        "THUMB", description="Small artwork suitable for a thumbnail.")
+
+
+ImageSizeArg = Annotated[ImageSize, arg("Requested artwork size.")]
+
+
+@described(strawberry.type)
+class Image:
+    """Artwork exposed as a URL and whether this server hosts it."""
+    url: str = desc("URL of the artwork.")
+    local: bool = desc("Whether the URL is served by this Ownfoil server.")
 
 
 @described(strawberry.type)
@@ -341,6 +363,8 @@ class AppVersion:
     release_date: Optional[str] = desc(
         "When this version shipped, as titledb reports it. Null when unknown.",
         default=None)
+    display_version: Optional[str] = desc(
+        "The user-facing version string, when available.", default=None)
 
 
 @described(strawberry.type)
@@ -390,6 +414,8 @@ class App:
     release_date: Optional[str] = desc(
         "When this version shipped. Populated for UPDATE rows; null on BASE and DLC "
         "rows, whose date lives on `titledb.releaseDate`.", default=None)
+    display_version: Optional[str] = desc(
+        "The user-facing version string, when available.", default=None)
 
     title: Optional["Title"] = desc(
         "The parent title, so a card built from an app can show the title's name and "
@@ -410,6 +436,8 @@ class App:
     # "not exposed for this role"; an empty list means "exposed but no files".
     files_loaded: Private[Optional[List[File]]] = None
     titledb_loaded: Private[Optional["Title"]] = None
+    download_file_loaded: Private[Optional[DbFile]] = None
+    download_file_resolved: Private[bool] = False
 
     @described_field
     def files(self, filter: NestedFileFilter = None) -> Optional[List[File]]:
@@ -427,6 +455,61 @@ class App:
         UPDATE apps not present in titledb). Not hydrated for apps reached as a
         file's back-link under `apps { files { apps } }`."""
         return self.titledb_loaded
+
+    def _download_file(self) -> Optional[DbFile]:
+        if not self.download_file_resolved:
+            try:
+                app_pk = int(self.id)
+            except (TypeError, ValueError):
+                self.download_file_resolved = True
+                return None
+            self.download_file_loaded = db.session.query(DbFile).join(
+                app_files, app_files.c.file_id == DbFile.id
+            ).filter(app_files.c.app_id == app_pk).order_by(DbFile.id).first()
+            self.download_file_resolved = True
+        return self.download_file_loaded
+
+    @described_field
+    def download_url(self) -> Optional[str]:
+        """Relative endpoint for downloading one library file carrying this app."""
+        file = self._download_file()
+        return f"/api/get_game/{file.id}" if file else None
+
+    @described_field
+    def download_size(self) -> Optional[int]:
+        """Size in bytes of the selected downloadable library file."""
+        file = self._download_file()
+        return file.size if file else None
+
+    @described_field
+    def download_extension(self) -> Optional[str]:
+        """File extension of the selected downloadable library file."""
+        file = self._download_file()
+        return file.extension if file else None
+
+    @described_field
+    def latest_owned_version(self) -> Optional[AppVersion]:
+        """Highest owned update version for a base game, if one is in the library."""
+        if getattr(self.app_type, "value", self.app_type) != APP_TYPE_BASE:
+            return None
+        title = DbTitle.query.filter_by(title_id=self.title_id).first()
+        if title is None:
+            return None
+        version = DbApp.query.filter_by(
+            title_id=title.id, app_type=APP_TYPE_UPD, owned=True
+        ).order_by(cast(DbApp.app_version, Integer).desc()).first()
+        if version is None:
+            return None
+        try:
+            version_number = int(version.app_version)
+        except (TypeError, ValueError):
+            version_number = 0
+        return AppVersion(
+            version=version_number,
+            owned=True,
+            release_date=version.release_date,
+            display_version=None,
+        )
 
 
 @described(strawberry.type)
@@ -493,6 +576,21 @@ class Title:
     ownership: Optional[Ownership] = desc(
         "What the library holds for this title. Null for a title that is only in the "
         "catalogue - which is why it is not three booleans on this type.", default=None)
+
+    @described_field
+    def icon(self, size: ImageSizeArg = ImageSize.CLIENT) -> Optional[Image]:
+        """Square icon artwork, when the catalogue provides one."""
+        return Image(url=self.icon_url, local=False) if self.icon_url else None
+
+    @described_field
+    def banner(self, size: ImageSizeArg = ImageSize.CLIENT) -> Optional[Image]:
+        """Wide banner artwork, when the catalogue provides one."""
+        return Image(url=self.banner_url, local=False) if self.banner_url else None
+
+    @described_field
+    def screenshots(self, size: ImageSizeArg = ImageSize.CLIENT) -> Optional[List[Image]]:
+        """Screenshots for the title; empty because this catalogue stores none."""
+        return []
 
     # Eagerly batch-loaded by the titles resolver. None means "not exposed for
     # this role"; an empty list means "exposed but no apps". Hidden from the

@@ -29,6 +29,9 @@ class StringFilter:
     in_: Optional[List[str]] = desc(
         "Matches any value in the list. An empty list is no constraint.",
         name="in", default=None)
+    not_in: Optional[List[str]] = desc(
+        "Excludes values in the list. An empty list is no constraint.",
+        name="notIn", default=None)
 
 
 @described(strawberry.input)
@@ -260,6 +263,13 @@ def string_clauses(column_sql: str, f: Optional[StringFilter], params: dict, key
             params[pk] = v
             keys.append(f":{pk}")
         out.append(f"{column_sql} IN ({','.join(keys)})")
+    if f.not_in:
+        keys = []
+        for i, v in enumerate(f.not_in):
+            pk = f"{key}_not_in_{i}"
+            params[pk] = v
+            keys.append(f":{pk}")
+        out.append(f"{column_sql} NOT IN ({','.join(keys)})")
     return out
 
 
@@ -580,6 +590,8 @@ def match_string(value, f: Optional[StringFilter]) -> bool:
     if f.contains is not None and f.contains.lower() not in str(value).lower():
         return False
     if f.in_ is not None and value not in f.in_:
+        return False
+    if f.not_in is not None and value in f.not_in:
         return False
     return True
 

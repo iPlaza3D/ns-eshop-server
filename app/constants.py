@@ -18,6 +18,13 @@ TITLEDB_DEFAULT_FILES = [
 TITLES_DB_FILE = os.path.join(CONFIG_DIR, 'titles.db')
 OWNFOIL_DB = 'sqlite:///' + DB_FILE
 
+APP_VERSION = "1.0.0"
+API_PROTOCOL_VERSION = 1
+HTTP_PORT = 8465
+DISCOVERY_PORT = 8465
+DISCOVERY_REQUEST = b'OWNFOIL_DISCOVER'
+DISCOVERY_MAGIC = 'OWNFOIL'
+
 # Global file watcher defaults
 DEFAULT_WATCHER = {"enabled": True, "polling_interval": 60}
 
@@ -57,6 +64,7 @@ DEFAULT_SETTINGS = {
         "region": "US",
     },
     "shop": {
+        "name": "NS eShop Server",
         "host": "",
         "public": False,
         "motd": "Welcome to your own shop!",
@@ -74,6 +82,9 @@ DEFAULT_SETTINGS = {
             },
             "sphaira": {"enabled": True,}
         }
+    },
+    "server": {
+        "uid": "",
     },
     "scheduler": {
         "titledb_update_interval": "12h",

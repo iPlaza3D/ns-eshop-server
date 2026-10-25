@@ -22,6 +22,7 @@ import realtime
 import titledb
 import os
 from clients import CyberFoilClient, TinfoilClient, SphairaClient
+import discovery
 
 def init():
     global watcher
@@ -33,6 +34,8 @@ def init():
     watcher_thread = threading.Thread(target=watcher.run)
     watcher_thread.daemon = True
     watcher_thread.start()
+
+    discovery.reconcile()
 
     # init libraries
     library_paths = get_library_paths()
@@ -217,10 +220,32 @@ def access_shop():
 def access_shop_auth():
     return access_shop()
 
-@app.route('/', defaults={'path': ''})
+@app.route('/', defaults={'path': ''}, methods=['GET', 'OPTIONS'])
 @app.route('/<path:path>')
 def index(path=None):
     """Main shop endpoint routing to either client-specific shop or web browser UI."""
+    if request.method == 'OPTIONS' and not path:
+        success, error, user = resolve_shop_caller(request)
+        if not success:
+            return shop_access_denied(error, user)
+        settings = get_settings()
+        return jsonify({
+            'uid': get_server_uid(),
+            'name': settings['shop']['name'],
+            'version': APP_VERSION,
+            'protocol_version': API_PROTOCOL_VERSION,
+            'motd': settings['shop']['motd'],
+            'public': settings['shop']['public'],
+            'remote': settings['shop']['host'],
+            'features': {
+                'shop': True,
+                'resumable_download': True,
+                'dumps_upload': False,
+                'save_backup': False,
+                'resumable_upload': False,
+            },
+        })
+
     # Check if this is a client request
     client = get_client_for_request(request)
 

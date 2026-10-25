@@ -5,6 +5,7 @@ from typing import Optional
 from flask_login import current_user
 
 from auth import admin_account_created
+from settings import get_settings
 
 
 @dataclass
@@ -14,20 +15,26 @@ class GraphQLContext:
     can_shop: bool
 
 
-def build_context() -> GraphQLContext:
-    """Build the GraphQL context from the current Flask request.
+def build_context(user=None) -> GraphQLContext:
+    """Build the GraphQL context for the resolved session or Basic Auth user.
 
     When no admin user has been provisioned (initial setup) auth is disabled;
     callers are treated as admin/shop to mirror the rest of the API.
     """
     if not admin_account_created():
         return GraphQLContext(user=None, can_admin=True, can_shop=True)
-    if not current_user.is_authenticated:
-        return GraphQLContext(user=None, can_admin=False, can_shop=False)
+    if user is None and current_user.is_authenticated:
+        user = current_user._get_current_object()
+    if user is None:
+        return GraphQLContext(
+            user=None,
+            can_admin=False,
+            can_shop=get_settings()['shop']['public'],
+        )
     return GraphQLContext(
-        user=current_user,
-        can_admin=bool(current_user.has_admin_access()),
-        can_shop=bool(current_user.has_shop_access()),
+        user=user,
+        can_admin=bool(user.has_admin_access()),
+        can_shop=bool(user.has_shop_access()) or get_settings()['shop']['public'],
     )
 
 

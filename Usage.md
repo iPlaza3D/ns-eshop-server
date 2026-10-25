@@ -73,13 +73,16 @@ Ownfoil supports multiple clients to install content on your Nintendo Switch. Th
 ## [Sphaira:](https://github.com/ITotalJustice/sphaira)
 - `HTTP` / `HTTPS` protocol support
 - User authentication
+- Ownfoil server discovery and content-based browsing in current Sphaira versions
 - Directory-based file browsing
 - [Content filtering](#content-filters) (games, updates, DLC, multi-content) based on URL
 - Compressed content (NSZ and XCZ) support
 
-Sphaira browses your shop as a folder tree rather than a shop listing, so what you see is the layout of your library on disk. Opening a file shows a preview of its content, to actually install it press `Options` → `Install`.
+Current Sphaira versions can find Ownfoil automatically on the local network and browse content by game. This requires UDP port `8465` to reach the server; Docker deployments must publish both TCP and UDP on that port. Automatic search is local-network discovery only.
 
-Sphaira identifies itself in its requests since version `1.0.6`, which Ownfoil needs to serve the shop. Be sure to use an up to date version if encountering issues.
+Sphaira also supports a manually configured HTTP mount, which browses your shop as a folder tree rather than a shop listing. Opening a file shows a preview of its content; to install it, press `Options` → `Install`.
+
+Sphaira identifies itself in its HTTP mount requests since version `1.0.6`. Use an up-to-date version if encountering issues.
 
 ## [CyberFoil:](https://github.com/luketanti/CyberFoil)
 - `HTTP` / `HTTPS` protocol support

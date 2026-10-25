@@ -535,6 +535,21 @@ def test_apps_filter_by_version_numerically(library, filter_literal, expected):
     assert sorted(versions) == expected
 
 
+def test_app_id_not_in_filter_works_at_sql_and_nested_paths(library):
+    excluded = query(library, """
+        query { apps(filter: {appId: {notIn: ["%s"]}}, page: 1, pageSize: 50) {
+            items { appId } } }""" % ALPHA_UPD)["apps"]["items"]
+    assert len(excluded) == 3
+    assert {item["appId"] for item in excluded} == {ALPHA, ALPHA_DLC}
+
+    nested = query(library, """
+        query { title(titleId: "%s") {
+            apps(filter: {appId: {notIn: ["%s"]}}) { appId }
+        } }""" % (ALPHA, ALPHA_UPD))["title"]["apps"]
+    assert len(nested) == 3
+    assert {item["appId"] for item in nested} == {ALPHA, ALPHA_DLC}
+
+
 def test_apps_sort_by_version(library):
     def versions(direction):
         return [i["appVersion"] for i in query(library, """

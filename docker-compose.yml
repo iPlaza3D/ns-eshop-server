@@ -20,3 +20,4 @@ services:
       - ./data:/app/data
     ports:
       - "8465:8465"
+      - "8465:8465/udp"

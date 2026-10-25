@@ -71,7 +71,9 @@ def main():
     def worker_exit(server, worker):
         """Stop watcher and worker pool when Gunicorn worker exits."""
         from realtime import stop as stop_realtime
+        from discovery import stop as stop_discovery
         stop_realtime()
+        stop_discovery()
         if app_mod.pool is not None:
             app_mod.pool.shutdown()
         if app_mod.watcher is not None:
