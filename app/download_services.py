@@ -1,7 +1,6 @@
 """Small adapters for Jackett and Synology Download Station."""
 
 import requests
-from xml.etree import ElementTree
 
 from settings import get_settings
 
@@ -35,28 +34,12 @@ def search_jackett(query):
 
     response = requests.get(
         f"{config['url'].rstrip('/')}/api/v2.0/indexers/all/results/torznab/api",
-        params={'apikey': config.get('api_key', ''), 't': 'search', 'q': query},
+        params={'apikey': config.get('api_key', ''), 'q': query},
         timeout=20,
     )
     response.raise_for_status()
-    try:
-        payload = response.json()
-        results = payload.get('Results', []) if isinstance(payload, dict) else []
-    except ValueError:
-        # Torznab commonly returns RSS/XML unless the Jackett build is configured
-        # for JSON. Keep both formats working across Jackett versions.
-        root = ElementTree.fromstring(response.text)
-        results = []
-        for item in root.findall('.//item'):
-            attrs = {node.attrib.get('name'): node.attrib.get('value') for node in item.findall('{*}attr')}
-            results.append({
-                'Title': item.findtext('title'),
-                'Link': item.findtext('link'),
-                'Guid': item.findtext('guid'),
-                'Size': attrs.get('size'),
-                'Seeders': attrs.get('seeders'),
-                'Tracker': attrs.get('tracker'),
-            })
+    payload = response.json()
+    results = payload.get('Results', []) if isinstance(payload, dict) else []
     normalized = []
     for result in results[:50]:
         uri = result.get('MagnetUri') or result.get('Link') or result.get('Guid')
@@ -72,64 +55,6 @@ def search_jackett(query):
     return normalized
 
 
-def test_jackett():
-    """Verify that Jackett accepts the configured API key."""
-    config = _service('jackett')
-    response = requests.get(
-        f"{config['url'].rstrip('/')}/api/v2.0/indexers/all/results/torznab/api",
-        params={'apikey': config.get('api_key', ''), 't': 'search', 'q': 'Nintendo'},
-        timeout=20,
-    )
-    response.raise_for_status()
-    try:
-        payload = response.json()
-        if not isinstance(payload, dict) or 'Results' not in payload:
-            raise DownloadServiceError('Jackett returned an invalid response.')
-        return {'results': len(payload['Results'])}
-    except ValueError:
-        try:
-            root = ElementTree.fromstring(response.text)
-            return {'results': len(root.findall('.//item'))}
-        except ElementTree.ParseError as error:
-            raise DownloadServiceError('Jackett returned an invalid response.') from error
-
-
-def _login_download_station(config):
-    auth = requests.get(
-        _webapi_url(config['url'], 'auth.cgi'),
-        params={
-            'api': 'SYNO.API.Auth',
-            'version': 6,
-            'method': 'login',
-            'account': config.get('username', ''),
-            'passwd': config.get('password', ''),
-            'session': 'DownloadStation',
-            'format': 'sid',
-        },
-        timeout=20,
-    ).json()
-    if not auth.get('success'):
-        raise DownloadServiceError('Download Station rejected the configured credentials.')
-    return auth['data']['sid']
-
-
-def test_download_station():
-    """Verify credentials without creating a download task."""
-    config = _service('download_station')
-    sid = _login_download_station(config)
-    try:
-        return {'connected': True}
-    finally:
-        try:
-            requests.get(
-                _webapi_url(config['url'], 'auth.cgi'),
-                params={'api': 'SYNO.API.Auth', 'version': 6, 'method': 'logout', 'session': 'DownloadStation', '_sid': sid},
-                timeout=10,
-            )
-        except requests.RequestException:
-            pass
-
-
 def add_to_download_station(uri):
     """Authenticate and enqueue a magnet/torrent URI in Download Station."""
     config = _service('download_station')
@@ -137,7 +62,20 @@ def add_to_download_station(uri):
     if not uri or not (uri.startswith('magnet:') or uri.startswith('http://') or uri.startswith('https://')):
         raise DownloadServiceError('The selected result does not contain a valid download URI.')
 
-    sid = _login_download_station(config)
+    auth_params = {
+        'api': 'SYNO.API.Auth',
+        'version': 6,
+        'method': 'login',
+        'account': config.get('username', ''),
+        'passwd': config.get('password', ''),
+        'session': 'DownloadStation',
+        'format': 'sid',
+    }
+    auth = requests.get(_webapi_url(config['url'], 'auth.cgi'), params=auth_params, timeout=20).json()
+    if not auth.get('success'):
+        raise DownloadServiceError('Download Station rejected the configured credentials.')
+
+    sid = auth['data']['sid']
     try:
         created = requests.get(
             _webapi_url(config['url'], 'DownloadStation/task.cgi'),

@@ -240,18 +240,6 @@
                             </button>
                             <span id="downloadSearchFeedback" class="game-detail-muted" aria-live="polite"></span>
                         </div>
-                        <div id="downloadSearchControls" class="game-download-controls d-none">
-                            <label for="downloadTargetSelect">Search for</label>
-                            <select id="downloadTargetSelect" class="form-select form-select-sm" onchange="updateDownloadTargetInput()">
-                                <option value="base">Base game</option>
-                                <option value="update">An update</option>
-                                <option value="dlc">DLC</option>
-                                <option value="language">Language pack</option>
-                                <option value="custom">Custom query</option>
-                            </select>
-                            <select id="downloadVersionSelect" class="form-select form-select-sm d-none"></select>
-                            <input id="downloadCustomQueryInput" class="form-control form-control-sm d-none" placeholder="Search query">
-                        </div>
                         <div id="downloadSearchResults" class="game-detail-downloads d-none"></div>
                         {% endif %}
 
@@ -281,7 +269,6 @@
     let searchDebounce;
     let detailFetchSeq = 0;
     let activeDetailGame = null;
-    let activeDownloadTitle = null;
     let featuredGame = null;
     const FAVORITES_STORAGE_KEY = 'ns-eshop-server-favorites';
 
@@ -823,8 +810,6 @@
         activeDetailGame = game;
         updateFavoriteButton(game);
         const title = detail || {};
-        activeDownloadTitle = title;
-        populateDownloadTargets(title);
         const selectedDlc = game.app_type === 'DLC'
             ? (title.availableDlc || []).find(dlc => dlc.appId === game.appId)
             : null;
@@ -1021,11 +1006,10 @@
         const button = document.getElementById('searchDownloadsBtn');
         const results = document.getElementById('downloadSearchResults');
         const feedback = document.getElementById('downloadSearchFeedback');
-        const query = getDownloadSearchQuery();
+        const query = document.getElementById('gameDetailTitle').textContent.trim();
         if (!button || !results || !query) return;
         button.disabled = true;
         feedback.textContent = 'Searching Jackett...';
-        document.getElementById('downloadSearchControls')?.classList.remove('d-none');
         results.classList.remove('d-none');
         results.replaceChildren();
         try {
@@ -1054,51 +1038,6 @@
             feedback.textContent = error.message;
         } finally {
             button.disabled = false;
-        }
-    }
-
-    function getDownloadSearchQuery() {
-        const title = document.getElementById('gameDetailTitle').textContent.trim();
-        const target = document.getElementById('downloadTargetSelect')?.value || 'base';
-        if (target === 'custom') return document.getElementById('downloadCustomQueryInput').value.trim();
-        if (target === 'update') {
-            const version = document.getElementById('downloadVersionSelect').value;
-            return `${title} update ${version}`.trim();
-        }
-        if (target === 'dlc') {
-            const dlc = document.getElementById('downloadVersionSelect').value;
-            return `${title} DLC ${dlc}`.trim();
-        }
-        if (target === 'language') return `${title} language pack`;
-        return title;
-    }
-
-    function updateDownloadTargetInput() {
-        const target = document.getElementById('downloadTargetSelect')?.value;
-        populateDownloadTargets(activeDownloadTitle);
-        document.getElementById('downloadVersionSelect')?.classList.toggle('d-none', target !== 'update' && target !== 'dlc');
-        document.getElementById('downloadCustomQueryInput')?.classList.toggle('d-none', target !== 'custom');
-    }
-
-    function populateDownloadTargets(title) {
-        const select = document.getElementById('downloadVersionSelect');
-        const target = document.getElementById('downloadTargetSelect')?.value;
-        if (!select || !title || (target !== 'update' && target !== 'dlc')) return;
-        select.replaceChildren();
-        const entries = target === 'update'
-            ? (title.availableVersions || []).map(version => ({value: formatGameVersion(version.version), label: formatGameVersion(version.version)}))
-            : (title.availableDlc || []).map(dlc => ({value: dlc.titledb?.name || dlc.appId, label: dlc.titledb?.name || dlc.appId}));
-        entries.forEach(entry => {
-            const option = document.createElement('option');
-            option.value = entry.value;
-            option.textContent = entry.label;
-            select.appendChild(option);
-        });
-        if (!entries.length) {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = target === 'update' ? 'Any update' : 'Any DLC';
-            select.appendChild(option);
         }
     }
 

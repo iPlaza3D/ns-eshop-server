@@ -521,11 +521,9 @@
                     <div class="col-md-6">
                         <label for="jackettApiKeyInput" class="form-label">API key</label>
                         <input type="password" class="form-control" id="jackettApiKeyInput" autocomplete="new-password">
-                        <div class="form-text"><span id="jackettKeyStatus">Not configured</span>. Leave blank to keep the current key.</div>
+                        <div class="form-text">Leave blank to keep the current key.</div>
                     </div>
                 </div>
-                <button type="button" class="btn btn-outline-secondary mb-3" onclick="testDownloadService('jackett')">Test Jackett</button>
-                <span id="jackettTestFeedback" class="ms-2" aria-live="polite"></span>
 
                 <h4 class="pt-2 pb-2">Synology Download Station</h4>
                 <div class="mb-3 form-check">
@@ -544,11 +542,9 @@
                     <div class="col-md-3">
                         <label for="downloadStationPasswordInput" class="form-label">Password</label>
                         <input type="password" class="form-control" id="downloadStationPasswordInput" autocomplete="new-password">
-                        <div class="form-text"><span id="downloadStationPasswordStatus">Not configured</span>. Leave blank to keep the current password.</div>
+                        <div class="form-text">Leave blank to keep the current password.</div>
                     </div>
                 </div>
-                <button type="button" class="btn btn-outline-secondary mb-3" onclick="testDownloadService('download_station')">Test Download Station</button>
-                <span id="downloadStationTestFeedback" class="ms-2" aria-live="polite"></span>
                 <div class="mb-3">
                     <button type="button" id="submitDownloadSettingsBtn" class="btn btn-primary"
                         onClick='submitDownloadSettings()'>Save download settings</button>
@@ -1290,8 +1286,6 @@
                 if (result.success) {
                     $('#jackettApiKeyInput').val('');
                     $('#downloadStationPasswordInput').val('');
-                    $('#jackettKeyStatus').text('API key configured');
-                    $('#downloadStationPasswordStatus').text('Password configured');
                 }
                 $('#submitDownloadSettingsBtn').prop('disabled', false);
             },
@@ -1299,24 +1293,6 @@
                 $('#submitDownloadSettingsBtn').prop('disabled', false);
             }
         });
-    }
-
-    function testDownloadService(service) {
-        const isJackett = service === 'jackett';
-        const feedback = $('#' + (isJackett ? 'jackettTestFeedback' : 'downloadStationTestFeedback'));
-        feedback.text('Testing...').removeClass('text-success text-danger');
-        $.getJSON('/api/downloads/test?service=' + encodeURIComponent(service))
-            .done(function (result) {
-                if (result.success) {
-                    feedback.text('Connection OK').addClass('text-success');
-                } else {
-                    feedback.text(result.error || 'Test failed.').addClass('text-danger');
-                }
-            })
-            .fail(function (xhr) {
-                const result = xhr.responseJSON || {};
-                feedback.text(result.error || 'Connection failed.').addClass('text-danger');
-            });
     }
 
     function submitLibraryManagementSettings() {
@@ -1566,12 +1542,10 @@
             const jackett = downloadSettings['jackett'] || {};
             $('#jackettEnabledCheck').prop('checked', !!jackett['enabled']);
             setInputVal('jackettUrlInput', jackett['url'] || '');
-            $('#jackettKeyStatus').text(jackett['api_key_configured'] ? 'API key configured' : 'API key not configured');
             const downloadStation = downloadSettings['download_station'] || {};
             $('#downloadStationEnabledCheck').prop('checked', !!downloadStation['enabled']);
             setInputVal('downloadStationUrlInput', downloadStation['url'] || '');
             setInputVal('downloadStationUsernameInput', downloadStation['username'] || '');
-            $('#downloadStationPasswordStatus').text(downloadStation['password_configured'] ? 'Password configured' : 'Password not configured');
         });
 
     });

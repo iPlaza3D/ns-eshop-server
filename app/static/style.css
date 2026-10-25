@@ -1922,19 +1922,6 @@ body {
     margin-top: .75rem;
 }
 
-.game-download-controls {
-    display: grid;
-    gap: .4rem;
-    margin-top: .75rem;
-}
-
-.game-download-controls label {
-    font-size: .75rem;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    opacity: .7;
-}
-
 .game-download-result {
     display: flex;
     align-items: center;
