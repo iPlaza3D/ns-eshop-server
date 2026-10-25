@@ -698,7 +698,7 @@
     }
 
     function detailText(key, fallback) {
-        return fallback || key;
+        return window.ownfoilI18n ? window.ownfoilI18n.t(key) : (fallback || key);
     }
 
     function uiText(key) {

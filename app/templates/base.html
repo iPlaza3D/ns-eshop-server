@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="light">
 
 <head>
     <meta charset="utf-8">
@@ -28,7 +28,7 @@
     <link rel="manifest" href="{{ url_for('static', filename='favicon/site.webmanifest') }}" />
 </head>
 
-<body{% if title == 'Library' %} class="storefront-body"{% endif %}>
+<body>
     {% block content %}
     {% endblock %}
     <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
