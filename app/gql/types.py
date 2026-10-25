@@ -476,7 +476,7 @@ class App:
         return f"/api/get_game/{file.id}" if file else None
 
     @described_field
-    def download_size(self) -> Optional[int]:
+    def download_size(self) -> Optional[BigInt]:
         """Size in bytes of the selected downloadable library file."""
         file = self._download_file()
         return file.size if file else None

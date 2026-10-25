@@ -9,6 +9,7 @@ from constants import (
     APP_VERSION, DISCOVERY_MAGIC, DISCOVERY_REQUEST, HTTP_PORT,
 )
 from settings import get_server_uid, set_shop_settings
+from db import Files, db
 
 
 def test_discovery_responder_answers_sphaira_broadcast(shop_app):
@@ -165,3 +166,34 @@ def test_sphaira_download_fields_resolve_to_existing_file(shop_app):
     assert ranged_download.status_code == 206
     assert ranged_download.headers["Content-Range"] == "bytes 0-15/4096"
     assert len(ranged_download.data) == 16
+
+
+def test_sphaira_download_size_supports_files_larger_than_graphql_int(shop_app):
+    set_shop_settings({"public": True})
+    large_size = 12_752_574_567
+    with shop_app.app.app_context():
+        file = Files.query.filter_by(id=1).one()
+        file.size = large_size
+        db.session.commit()
+
+    response = shop_app.client.post(
+        "/api/graphql",
+        json={"query": """{
+            title(titleId: "0100000000010000") {
+                base: apps(owned: true, appType: [BASE]) {
+                    downloadSize downloadUrl
+                }
+                updates: apps(owned: true, appType: [UPDATE]) {
+                    downloadSize downloadUrl
+                }
+                dlc: apps(owned: true, appType: [DLC]) {
+                    downloadSize downloadUrl
+                }
+            }
+        }"""},
+    )
+
+    assert response.status_code == 200
+    assert "errors" not in response.json, response.json
+    title = response.json["data"]["title"]
+    assert title["base"][0]["downloadSize"] == large_size
