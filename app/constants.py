@@ -83,6 +83,19 @@ DEFAULT_SETTINGS = {
             "sphaira": {"enabled": True,}
         }
     },
+    "downloads": {
+        "jackett": {
+            "enabled": False,
+            "url": "",
+            "api_key": "",
+        },
+        "download_station": {
+            "enabled": False,
+            "url": "",
+            "username": "",
+            "password": "",
+        },
+    },
     "server": {
         "uid": "",
     },
