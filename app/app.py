@@ -24,7 +24,13 @@ import titledb
 import os
 from clients import CyberFoilClient, TinfoilClient, SphairaClient
 import discovery
-from download_services import DownloadServiceError, add_to_download_station, search_jackett
+from download_services import (
+    DownloadServiceError,
+    add_to_download_station,
+    search_jackett,
+    test_download_station,
+    test_jackett,
+)
 
 def init():
     global watcher
@@ -371,6 +377,9 @@ def get_settings_api():
     for service in ('jackett', 'download_station'):
         if isinstance(downloads.get(service), dict):
             if service == 'jackett':
+                downloads[service]['api_key_configured'] = bool(
+                    get_settings().get('downloads', {}).get(service, {}).get('api_key')
+                )
                 downloads[service]['api_key'] = ''
             else:
                 downloads[service]['password'] = ''
@@ -456,6 +465,24 @@ def add_download_api():
     except (ValueError, KeyError):
         logger.exception('Download Station returned an invalid response')
         return jsonify({'success': False, 'error': 'Download Station returned an invalid response.'}), 502
+
+@app.get('/api/downloads/test')
+@access_required('admin')
+def test_download_service_api():
+    service = request.args.get('service', '')
+    try:
+        result = test_jackett() if service == 'jackett' else test_download_station() if service == 'download_station' else None
+        if result is None:
+            return jsonify({'success': False, 'error': 'Unknown download service.'}), 400
+        return jsonify({'success': True, 'service': service, 'details': result})
+    except DownloadServiceError as error:
+        return jsonify({'success': False, 'error': str(error)}), 400
+    except requests.RequestException:
+        logger.exception('Download service test failed')
+        return jsonify({'success': False, 'error': 'The service could not be reached.'}), 502
+    except (ValueError, KeyError):
+        logger.exception('Download service returned an invalid test response')
+        return jsonify({'success': False, 'error': 'The service returned an invalid response.'}), 502
 
 @app.route('/api/settings/library/paths', methods=['GET', 'POST', 'DELETE'])
 @access_required('admin')
