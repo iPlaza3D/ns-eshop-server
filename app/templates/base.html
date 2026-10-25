@@ -28,7 +28,7 @@
     <link rel="manifest" href="{{ url_for('static', filename='favicon/site.webmanifest') }}" />
 </head>
 
-<body>
+<body{% if title == 'Library' %} class="storefront-body"{% endif %}>
     {% block content %}
     {% endblock %}
     <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
