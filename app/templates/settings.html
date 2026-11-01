@@ -364,6 +364,11 @@
                             <input type="text" class="form-control form-control-code" id="multiTemplateInput">
                         </div>
                         <p class="text-break"><strong>Make sure the templates contain <code>[{appId}][v{appVersion}]</code> for Tinfoil to recognize the apps.</strong></p>
+                        <div class="alert alert-secondary mt-3" id="organizerPreview">
+                            <p class="mb-2"><strong>Example final names</strong></p>
+                            <div class="small text-muted mb-2">The extension is added automatically. Files are only moved when the organizer is enabled.</div>
+                            <ul class="mb-0 ps-3" id="organizerPreviewList"></ul>
+                        </div>
                     </div>
                     <div class="col-5">
                         <div class="alert alert-dark">
@@ -1117,6 +1122,40 @@
         });
     }
 
+    function organizerTemplatePreview(template, values) {
+        if (!template) return '(empty template)';
+        return template.replace(/\{(\w+)\}/g, function (_, key) {
+            return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : `{${key}}`;
+        }) + `.${values.extension}`;
+    }
+
+    function updateOrganizerPreview() {
+        const values = {
+            titleName: 'The Legend of Zelda Breath of the Wild',
+            titleId: '010000003CFE0000',
+            appId: '010000003CFE0800',
+            appName: 'The Legend of Zelda Breath of the Wild',
+            appVersion: '65536',
+            patchLevel: '1',
+            extension: 'nsp',
+        };
+        const examples = [
+            ['Base game', 'baseTemplateInput'],
+            ['Update', 'updateTemplateInput'],
+            ['DLC', 'dlcTemplateInput'],
+            ['Multi-content', 'multiTemplateInput'],
+        ];
+        const list = document.getElementById('organizerPreviewList');
+        if (!list) return;
+        list.replaceChildren();
+        examples.forEach(([label, id]) => {
+            const item = document.createElement('li');
+            const template = document.getElementById(id)?.value || '';
+            item.textContent = `${label}: ${organizerTemplatePreview(template, values)}`;
+            list.appendChild(item);
+        });
+    }
+
     function submitTitlesSettings() {
         $('#submitTitlesSettingsBtn').prop('disabled', true);
         data = {
@@ -1404,6 +1443,9 @@
             setInputVal("updateTemplateInput", librarySettings['management']['organizer']['templates']['update']);
             setInputVal("dlcTemplateInput", librarySettings['management']['organizer']['templates']['dlc']);
             setInputVal("multiTemplateInput", librarySettings['management']['organizer']['templates']['multi']);
+            updateOrganizerPreview();
+            $('#baseTemplateInput, #updateTemplateInput, #dlcTemplateInput, #multiTemplateInput')
+                .on('input', updateOrganizerPreview);
 
             // Titles settings
             titlesSettings = result['titles'];

@@ -326,7 +326,7 @@
                     appType
                     owned
                     titledb { name bannerUrl iconUrl }
-                    title { titleId name ownership { haveBase upToDate complete } }
+                    title { titleId name version ownership { haveBase upToDate complete } }
                     versions { version owned releaseDate }
                 }
             }
@@ -342,7 +342,7 @@
                 items {
                     appId appType owned
                     titledb { name iconUrl }
-                    title { titleId name ownership { haveBase upToDate complete } }
+                    title { titleId name version ownership { haveBase upToDate complete } }
                 }
             }
         }`;
@@ -350,7 +350,7 @@
     const TITLE_DETAILS_QUERY = `
         query TitleDetails($titleId: ID!) {
             title(titleId: $titleId) {
-                titleId source name bannerUrl iconUrl frontBoxArt description intro
+                titleId source name version bannerUrl iconUrl frontBoxArt description intro
                 developer publisher releaseDate category numberOfPlayers rating
                 ratingContent region regions languages
                 ownership { haveBase upToDate complete }
@@ -767,6 +767,12 @@
         return `v${(version >>> 16) & 0xffff}.${(version >>> 8) & 0xff}.${version & 0xff}`;
     }
 
+    function formatCommercialVersion(value) {
+        if (value === null || value === undefined || String(value).trim() === '') return '';
+        const version = String(value).trim();
+        return /^v/i.test(version) ? version : `v${version}`;
+    }
+
     function formatGameDate(value) {
         if (!value) return '';
         const raw = String(value);
@@ -855,6 +861,8 @@
         appendDetailFact(facts, 'Players', contentMeta.numberOfPlayers || title.numberOfPlayers);
         appendDetailFact(facts, 'Rating', contentMeta.rating || title.rating);
         appendDetailFact(facts, 'Languages', contentMeta.languages || title.languages);
+        appendDetailFact(facts, 'Commercial version', formatCommercialVersion(contentMeta.version || title.version) ||
+            detailText('Not available in TitleDB', 'Not available in TitleDB'));
         appendDetailFact(facts, 'Title ID', title.titleId || game.titleId || game.appId);
 
         const categories = document.getElementById('gameDetailCategories');
@@ -939,8 +947,15 @@
         versionList.replaceChildren();
         const versions = title.availableVersions || [];
         const versionHeading = document.createElement('h4');
-        versionHeading.textContent = detailText('Available updates', 'Available updates');
+        versionHeading.textContent = detailText('Internal update history', 'Internal update history');
         versionList.appendChild(versionHeading);
+        const versionNote = document.createElement('p');
+        versionNote.className = 'game-detail-muted';
+        versionNote.textContent = detailText(
+            'The commercial version is shown above. These entries are Nintendo internal build numbers used to compare updates.',
+            'The commercial version is shown above. These entries are Nintendo internal build numbers used to compare updates.'
+        );
+        versionList.appendChild(versionNote);
         if (!versions.length) {
             const empty = document.createElement('p');
             empty.className = 'game-detail-muted';
