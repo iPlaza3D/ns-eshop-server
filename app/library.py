@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from utils import *
 from db import update_file_path
+from maintenance import record_move
 
 def prepare_template_names(format_data, windows_compatible):
     """Sanitize the names before formatting, so they cannot introduce path separators, and cap their length."""
@@ -68,6 +69,12 @@ def organize_file(file_obj, library_path, organizer_settings):
         if current_filepath == new_full_path:
             return True
 
+        if organizer_settings.get('dry_run', False):
+            logger.info('Organizer preview: %s -> %s',
+                        os.path.relpath(current_filepath, library_path),
+                        os.path.relpath(new_full_path, library_path))
+            return None
+
         # Already organized with an "(n)" suffix from a previous collision:
         # Avoid re-running the rename loop only to bail out at the same name.
         new_dir_norm = os.path.dirname(new_full_path)
@@ -107,6 +114,7 @@ def organize_file(file_obj, library_path, organizer_settings):
                 # `current_filepath` after a previous collision retry.
                 update_file_path(library_path_str, src, candidate)
                 rel = os.path.relpath(candidate, library_path_str)
+                record_move(src, candidate)
                 logger.info(f'Organizing file: {original_filename} → {rel}')
                 return True
             except (FileExistsError, IntegrityError) as e:

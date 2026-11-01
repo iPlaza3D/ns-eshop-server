@@ -23,6 +23,8 @@ import titledb
 import os
 from clients import CyberFoilClient, TinfoilClient, SphairaClient
 import discovery
+from maintenance import (backup_state, delete_duplicate, find_duplicate_groups,
+                         list_changes, maintenance_report, undo_move)
 
 def init():
     global watcher
@@ -506,6 +508,63 @@ def set_worker_settings_api():
         data['group_limits'] = {**current, 'io': io}
     set_worker_settings(data)
     return jsonify({'success': True, 'errors': []})
+
+@app.get('/api/maintenance/report')
+@access_required('admin')
+def maintenance_report_api():
+    return jsonify(maintenance_report(get_library_paths()))
+
+@app.get('/api/maintenance/duplicates')
+@access_required('admin')
+def duplicate_preview_api():
+    """Return exact duplicate groups without changing the library."""
+    return jsonify({'groups': find_duplicate_groups(get_library_paths())})
+
+@app.post('/api/maintenance/duplicates/delete')
+@access_required('admin')
+def duplicate_delete_api():
+    """Delete one previewed duplicate after rechecking its SHA-256 digest."""
+    data = request.json or {}
+    path = data.get('path')
+    expected_sha256 = data.get('sha256')
+    if not path or not expected_sha256:
+        return jsonify({'success': False, 'error': 'path and sha256 are required'}), 400
+    try:
+        backup_state()
+        event = delete_duplicate(path, expected_sha256, get_library_paths())
+        file = Files.query.filter_by(filepath=path).first()
+        if file:
+            remove_file_from_apps(file.id)
+            db.session.delete(file)
+            db.session.commit()
+        return jsonify({'success': True, 'change': event})
+    except (OSError, ValueError) as error:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(error)}), 409
+
+@app.get('/api/maintenance/changes')
+@access_required('admin')
+def maintenance_changes_api():
+    return jsonify({'changes': list_changes(request.args.get('limit', 100))})
+
+@app.post('/api/maintenance/backup')
+@access_required('admin')
+def maintenance_backup_api():
+    return jsonify({'success': True, 'path': backup_state()})
+
+@app.post('/api/maintenance/undo')
+@access_required('admin')
+def maintenance_undo_api():
+    data = request.json or {}
+    try:
+        change = data.get('change')
+        if not isinstance(change, dict):
+            raise ValueError('A move change entry is required.')
+        backup_state()
+        return jsonify({'success': True, 'change': undo_move(change, get_library_paths())})
+    except (OSError, ValueError) as error:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(error)}), 409
 
 @app.post('/api/upload')
 @access_required('admin')

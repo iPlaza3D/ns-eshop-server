@@ -46,8 +46,11 @@ DEFAULT_SETTINGS = {
                 "depth": "hash",
             },
             "delete_older_updates": False,
+            "backup_before_maintenance": True,
             "organizer": {
                 "enabled": False,
+                "dry_run": False,
+                "auto_delete_duplicates": False,
                 "remove_empty_folders": True,
                 "windows_compatible": False,
                 "templates": {

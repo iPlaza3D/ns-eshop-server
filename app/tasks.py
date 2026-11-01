@@ -22,6 +22,7 @@ from db import (
     verification_status,
 )
 from settings import get_settings
+from maintenance import backup_state, delete_duplicate, find_duplicate_groups
 from utils import interval_string_to_timedelta, delete_empty_folders, human_size
 from library import (
     add_missing_apps_for_title, update_title_flags,
@@ -860,13 +861,28 @@ def library_maintenance_task(library_path=None, **kwargs):
     """Post-organization GC: prune empty folders and outdated updates."""
     settings = get_settings()
     organizer = settings['library']['management']['organizer']
+    management = settings['library']['management']
     # Empty directories are part of organizer housekeeping.  The old
     # remove_empty_folders switch made this silently depend on a second,
     # persisted setting that was disabled in existing installations.
     if organizer.get('enabled'):
         paths = [library_path] if library_path else [lib.path for lib in get_libraries()]
+        if management.get('backup_before_maintenance', True):
+            backup_state()
         for path in paths:
             delete_empty_folders(path)
+            if organizer.get('auto_delete_duplicates'):
+                for group in find_duplicate_groups([path]):
+                    for duplicate in group['duplicates']:
+                        try:
+                            delete_duplicate(duplicate, group['sha256'], [path])
+                            file = Files.query.filter_by(filepath=duplicate).first()
+                            if file:
+                                remove_file_from_apps(file.id)
+                                db.session.delete(file)
+                                db.session.commit()
+                        except (OSError, ValueError) as error:
+                            logger.warning('Could not remove duplicate %s: %s', duplicate, error)
     if settings['library']['management']['delete_older_updates']:
         enqueue_task('remove_outdated_updates')
 
