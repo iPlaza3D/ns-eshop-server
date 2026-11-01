@@ -329,11 +329,7 @@
                             <label class="form-check-label" for="organizerEnabledCheck">Enable organizer</label>
                             <div class="form-text">Enables automatic organization of identified files in the library, according to the templates below.</div>
                         </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="removeEmptyFoldersCheck">
-                            <label class="form-check-label" for="removeEmptyFoldersCheck">Remove empty folders</label>
-                            <div class="form-text">Removes empty folders after organizing files.</div>
-                        </div>
+                        <div class="form-text mb-3">Empty folders are removed automatically after the organizer moves files.</div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="windowsCompatibleCheck">
                             <label class="form-check-label" for="windowsCompatibleCheck">Windows compatible filenames</label>
@@ -1272,7 +1268,6 @@
             delete_older_updates: getCheckboxStatus("deleteOlderUpdatesCheck"),
             organizer: {
                 enabled: getCheckboxStatus("organizerEnabledCheck"),
-                remove_empty_folders: getCheckboxStatus("removeEmptyFoldersCheck"),
                 windows_compatible: getCheckboxStatus("windowsCompatibleCheck"),
                 templates: {
                     base: getInputVal("baseTemplateInput"),
@@ -1437,7 +1432,6 @@
             $("input[name='verificationDepth'][value='" + verification['depth'] + "']").prop("checked", true);
             $("#deleteOlderUpdatesCheck").prop("checked", librarySettings['management']['delete_older_updates']);
             $("#organizerEnabledCheck").prop("checked", librarySettings['management']['organizer']['enabled']);
-            $("#removeEmptyFoldersCheck").prop("checked", librarySettings['management']['organizer']['remove_empty_folders']);
             $("#windowsCompatibleCheck").prop("checked", librarySettings['management']['organizer']['windows_compatible']);
             setInputVal("baseTemplateInput", librarySettings['management']['organizer']['templates']['base']);
             setInputVal("updateTemplateInput", librarySettings['management']['organizer']['templates']['update']);
