@@ -1,4 +1,5 @@
 import hashlib
+import types
 
 import pytest
 
@@ -20,3 +21,25 @@ def test_artwork_reuses_cached_file(tmp_path, monkeypatch):
 
     assert result.path == str(path)
     assert result.content_type == 'image/jpeg'
+
+
+def test_file_access_accepts_authenticated_web_session(monkeypatch):
+    import app as app_module
+
+    user = types.SimpleNamespace(
+        user='web-user',
+        has_shop_access=lambda: True,
+    )
+    session_user = types.SimpleNamespace(
+        is_authenticated=True,
+        _get_current_object=lambda: user,
+    )
+    monkeypatch.setattr(app_module, 'get_settings', lambda: {'shop': {'public': False}})
+    monkeypatch.setattr(app_module, 'current_user', session_user)
+
+    @app_module.file_access
+    def protected_endpoint():
+        return 'ok'
+
+    with app_module.app.test_request_context('/api/artwork'):
+        assert protected_endpoint() == 'ok'
