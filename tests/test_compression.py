@@ -668,10 +668,11 @@ def _sweep(env, **settings):
         env.monkeypatch.setattr(tasks, "get_settings", lambda: _settings(**settings))
     env.monkeypatch.setattr(tasks, "enqueue_or_child",
                             lambda name, data=None: enqueued.append((name, data["file_id"])))
+    env.monkeypatch.setattr(tasks, "enqueue_task", lambda name, data=None: enqueued.append((name, None)))
     env.monkeypatch.setattr(tasks, "set_waiting_for_children", lambda: None)
     tasks.process_library_task()
-    assert all(name == "process_file" for name, _ in enqueued)
-    return sorted(fid for _, fid in enqueued)
+    assert all(name in ("process_file", "library_maintenance") for name, _ in enqueued)
+    return sorted(fid for name, fid in enqueued if name == "process_file")
 
 
 def test_process_library_selects_files_with_pending_work(env):
@@ -703,6 +704,15 @@ def test_process_library_skips_a_settled_library(env):
     env.seed("A.nsp")   # only the compress stage would apply, and it is off
 
     assert _sweep(env, compress_files=False) == []
+
+
+def test_process_library_schedules_maintenance_for_settled_library(env):
+    scheduled = []
+    env.monkeypatch.setattr(tasks, "enqueue_task", lambda name, data=None: scheduled.append(name))
+
+    tasks.process_library_task()
+
+    assert scheduled == ["library_maintenance"]
 
 
 # --- process_file driver -------------------------------------------------------------------
@@ -783,6 +793,16 @@ def test_process_library_continuation_runs_maintenance(env):
     env.monkeypatch.setattr(tasks, "enqueue_task", lambda name, data=None, **k: enqueued.append(name))
     tasks._process_library_done()
     assert enqueued == ["library_maintenance", "update_titles"]
+
+
+def test_library_maintenance_prunes_empty_folders_when_organizer_is_enabled(env):
+    calls = []
+    env.monkeypatch.setattr(tasks, "get_settings", lambda: _settings(organizer=True))
+    env.monkeypatch.setattr(tasks, "delete_empty_folders", lambda path: calls.append(path))
+
+    tasks.library_maintenance_task()
+
+    assert calls == [str(env.lib_dir)]
 
 
 @pytest.mark.parametrize("enabled,expected", [(True, True), (False, False)])
