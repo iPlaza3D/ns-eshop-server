@@ -48,7 +48,7 @@ DEFAULT_SETTINGS = {
             "delete_older_updates": False,
             "organizer": {
                 "enabled": False,
-                "remove_empty_folders": False,
+                "remove_empty_folders": True,
                 "windows_compatible": False,
                 "templates": {
                     "base": "{titleName}/{titleName} [{appId}][v{appVersion}]",

@@ -842,6 +842,11 @@ def process_library_task(**kwargs):
         enqueue_or_child('process_file', {'file_id': f.id})
     if files:
         set_waiting_for_children()
+    else:
+        # A sweep with no pending files still needs to run housekeeping.  This
+        # covers empty folders left behind by older organizer runs and makes a
+        # manual library scan sufficient to clean them up.
+        enqueue_task('library_maintenance')
 
 
 @register_continuation('process_library')
@@ -855,7 +860,10 @@ def library_maintenance_task(library_path=None, **kwargs):
     """Post-organization GC: prune empty folders and outdated updates."""
     settings = get_settings()
     organizer = settings['library']['management']['organizer']
-    if organizer.get('enabled') and organizer.get('remove_empty_folders'):
+    # Empty directories are part of organizer housekeeping.  The old
+    # remove_empty_folders switch made this silently depend on a second,
+    # persisted setting that was disabled in existing installations.
+    if organizer.get('enabled'):
         paths = [library_path] if library_path else [lib.path for lib in get_libraries()]
         for path in paths:
             delete_empty_folders(path)
