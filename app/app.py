@@ -201,16 +201,22 @@ def get_client_for_request(request):
     return None
 
 def file_access(f):
-    """Decorator for file serving endpoints with basic authentication (no client identification required)."""
+    """Protect file endpoints for both the web session and API clients."""
     @wraps(f)
     def _file_access(*args, **kwargs):
         # Check if shop is private
         if not get_settings()['shop']['public']:
-            # Shop is private, require authentication
-            auth_success, auth_error, user = basic_auth(request)
+            # Browser requests carry the Flask-Login session, while Switch/API
+            # clients authenticate with HTTP Basic Auth.
+            if current_user.is_authenticated:
+                user = current_user._get_current_object()
+                auth_success = True
+                auth_error = None
+            else:
+                auth_success, auth_error, user = basic_auth(request)
             if not auth_success:
                 return jsonify({'error': auth_error}), 401
-            elif not user.has_shop_access():
+            if not user.has_shop_access():
                 return jsonify({'error': f'User "{user.user}" does not have access to the shop.'}), 403
 
         return f(*args, **kwargs)
