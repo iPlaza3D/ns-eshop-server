@@ -326,7 +326,7 @@
                     appType
                     owned
                     titledb { name bannerUrl iconUrl }
-                    title { titleId name version ownership { haveBase upToDate complete } }
+                    title { titleId name version bannerUrl iconUrl ownership { haveBase upToDate complete } }
                     versions { version owned releaseDate }
                 }
             }
@@ -342,7 +342,7 @@
                 items {
                     appId appType owned
                     titledb { name iconUrl }
-                    title { titleId name version ownership { haveBase upToDate complete } }
+                    title { titleId name version bannerUrl iconUrl ownership { haveBase upToDate complete } }
                 }
             }
         }`;
@@ -670,8 +670,8 @@
                 appId: app.appId,
                 title_id_name: title.name || 'Unrecognized',
                 name: title.name || 'Unrecognized',
-                bannerUrl: meta.bannerUrl || PLACEHOLDER_BANNER,
-                iconUrl: meta.iconUrl || '',
+                bannerUrl: meta.bannerUrl || title.bannerUrl || PLACEHOLDER_BANNER,
+                iconUrl: meta.iconUrl || title.iconUrl || '',
                 app_type: 'BASE',
                 owned: ownership.haveBase,
                 has_latest_version: ownership.haveBase && ownership.upToDate,
@@ -688,8 +688,11 @@
             appId: app.appId,
             title_id_name: title.name || 'Unrecognized',
             name: meta.name || 'Unrecognized',
-            bannerUrl: meta.bannerUrl || PLACEHOLDER_BANNER,
-            iconUrl: meta.iconUrl || '',
+            // Updates often have no independent titledb artwork.  Their parent
+            // title is the canonical source, while DLC keeps its own artwork when
+            // available and falls back to the parent only when it is missing.
+            bannerUrl: meta.bannerUrl || title.bannerUrl || PLACEHOLDER_BANNER,
+            iconUrl: meta.iconUrl || title.iconUrl || '',
             app_type: app.appType,
             owned: app.owned,
             has_latest_version: ownedVersions.length > 0 && Math.max(...ownedVersions) >= highest,

@@ -331,6 +331,16 @@
                         </div>
                         <div class="form-text mb-3">Empty folders are removed automatically after the organizer moves files.</div>
                         <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="organizerDryRunCheck">
+                            <label class="form-check-label" for="organizerDryRunCheck">Preview organization only</label>
+                            <div class="form-text">Logs the proposed moves without changing files or folders.</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="autoDeleteDuplicatesCheck">
+                            <label class="form-check-label" for="autoDeleteDuplicatesCheck">Delete exact duplicates automatically</label>
+                            <div class="form-text text-warning">Only enable this if you want identical files removed without individual confirmation.</div>
+                        </div>
+                        <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="windowsCompatibleCheck">
                             <label class="form-check-label" for="windowsCompatibleCheck">Windows compatible filenames</label>
                             <div class="form-text">NS eShop Server enforces filename sanitization depending on the OS running it. Enabling this will sanitize filenames with
@@ -389,6 +399,17 @@
                     <button type="button" id="submitLibraryManagementSettingsBtn" class="btn btn-primary"
                         onClick='submitLibraryManagementSettings()'>Submit</button>
                 </div>
+
+                <h4 class="py-2 mt-4">Maintenance</h4>
+                <p>Review exact duplicates and recent organizer activity before removing anything.</p>
+                <div class="d-flex gap-2 mb-3 flex-wrap">
+                    <button type="button" class="btn btn-outline-secondary" onclick="loadMaintenanceReport()">Refresh report</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="loadDuplicatePreview()">Find exact duplicates</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="loadMaintenanceChanges()">Show recent changes</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="createMaintenanceBackup()">Create backup now</button>
+                </div>
+                <div id="maintenanceReport" class="small text-muted mb-3"></div>
+                <div id="duplicatePreview" class="table-responsive"></div>
 
                 <hr class="hr-settings">
                 <h2 class="pb-2">Titles</h2>
@@ -1268,6 +1289,8 @@
             delete_older_updates: getCheckboxStatus("deleteOlderUpdatesCheck"),
             organizer: {
                 enabled: getCheckboxStatus("organizerEnabledCheck"),
+                dry_run: getCheckboxStatus("organizerDryRunCheck"),
+                auto_delete_duplicates: getCheckboxStatus("autoDeleteDuplicatesCheck"),
                 windows_compatible: getCheckboxStatus("windowsCompatibleCheck"),
                 templates: {
                     base: getInputVal("baseTemplateInput"),
@@ -1289,6 +1312,89 @@
                 }
                 $('#submitLibraryManagementSettingsBtn').prop('disabled', false);
             }
+        });
+    }
+
+    async function loadMaintenanceReport() {
+        const response = await fetch('/api/maintenance/report');
+        const report = await response.json();
+        $('#maintenanceReport').text(`Files: ${report.files_on_disk} · Empty folders: ${report.empty_directories} · Duplicate groups: ${report.duplicate_groups} · Unidentified: ${report.unidentified_files} · Missing from disk: ${report.tracked_files_missing}`);
+    }
+
+    async function loadDuplicatePreview() {
+        const response = await fetch('/api/maintenance/duplicates');
+        const body = await response.json();
+        const target = document.getElementById('duplicatePreview');
+        target.replaceChildren();
+        if (!body.groups.length) {
+            target.textContent = 'No exact duplicate files found.';
+            return;
+        }
+        body.groups.forEach(group => {
+            const card = document.createElement('div');
+            card.className = 'alert alert-warning';
+            const heading = document.createElement('strong');
+            heading.textContent = `SHA-256 ${group.sha256.slice(0, 16)} · ${group.files.length} files`;
+            card.appendChild(heading);
+            group.duplicates.forEach(path => {
+                const row = document.createElement('div');
+                row.className = 'd-flex justify-content-between gap-2 mt-2';
+                const label = document.createElement('code');
+                label.textContent = path;
+                const button = document.createElement('button');
+                button.className = 'btn btn-sm btn-outline-danger';
+                button.textContent = 'Delete duplicate';
+                button.onclick = async () => {
+                    if (!confirm(`Delete this exact duplicate?\n${path}`)) return;
+                    const result = await fetch('/api/maintenance/duplicates/delete', {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({path, sha256: group.sha256})
+                    });
+                    const data = await result.json();
+                    if (!data.success) alert(data.error || 'Could not delete duplicate');
+                    await loadDuplicatePreview();
+                    await loadMaintenanceReport();
+                };
+                row.append(label, button);
+                card.appendChild(row);
+            });
+            target.appendChild(card);
+        });
+    }
+
+    async function createMaintenanceBackup() {
+        const response = await fetch('/api/maintenance/backup', {method: 'POST'});
+        const body = await response.json();
+        $('#maintenanceReport').text(body.success ? `Backup created: ${body.path}` : 'Backup failed');
+    }
+
+    async function loadMaintenanceChanges() {
+        const response = await fetch('/api/maintenance/changes?limit=30');
+        const body = await response.json();
+        const target = document.getElementById('duplicatePreview');
+        target.replaceChildren();
+        body.changes.forEach(change => {
+            const row = document.createElement('div');
+            row.className = 'd-flex justify-content-between gap-2 border-bottom py-2';
+            const text = document.createElement('code');
+            text.textContent = `${change.timestamp} · ${change.event} · ${change.source || change.path || ''} -> ${change.destination || ''}`;
+            row.appendChild(text);
+            if (change.event === 'move') {
+                const button = document.createElement('button');
+                button.className = 'btn btn-sm btn-outline-warning';
+                button.textContent = 'Undo';
+                button.onclick = async () => {
+                    const result = await fetch('/api/maintenance/undo', {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({change})
+                    });
+                    const data = await result.json();
+                    if (!data.success) alert(data.error || 'Could not undo move');
+                    await loadMaintenanceChanges();
+                };
+                row.appendChild(button);
+            }
+            target.appendChild(row);
         });
     }
 
@@ -1432,6 +1538,8 @@
             $("input[name='verificationDepth'][value='" + verification['depth'] + "']").prop("checked", true);
             $("#deleteOlderUpdatesCheck").prop("checked", librarySettings['management']['delete_older_updates']);
             $("#organizerEnabledCheck").prop("checked", librarySettings['management']['organizer']['enabled']);
+            $("#organizerDryRunCheck").prop("checked", librarySettings['management']['organizer']['dry_run']);
+            $("#autoDeleteDuplicatesCheck").prop("checked", librarySettings['management']['organizer']['auto_delete_duplicates']);
             $("#windowsCompatibleCheck").prop("checked", librarySettings['management']['organizer']['windows_compatible']);
             setInputVal("baseTemplateInput", librarySettings['management']['organizer']['templates']['base']);
             setInputVal("updateTemplateInput", librarySettings['management']['organizer']['templates']['update']);
