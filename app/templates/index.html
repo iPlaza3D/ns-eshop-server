@@ -237,7 +237,6 @@
                         <section class="game-detail-section game-detail-ownership" aria-labelledby="gameOwnershipHeading">
                             <h3 id="gameOwnershipHeading">Your library</h3>
                             <div id="gameOwnershipStatus" class="game-ownership-status"></div>
-                            <div id="gameDetailVersions" class="game-detail-versions"></div>
                             <div id="gameDetailContentList" class="game-dlc-list"></div>
                             <p id="gameDetailContentEmpty" class="game-detail-muted">No updates or DLC listed.</p>
                         </section>
@@ -997,36 +996,6 @@
         });
         document.getElementById('gameDetailContentEmpty').classList.toggle('d-none', contentItems.length > 0);
 
-        const versionList = document.getElementById('gameDetailVersions');
-        versionList.replaceChildren();
-        const versions = title.availableVersions || [];
-        const versionHeading = document.createElement('h4');
-        versionHeading.textContent = detailText('Internal update history', 'Internal update history');
-        versionList.appendChild(versionHeading);
-        const versionNote = document.createElement('p');
-        versionNote.className = 'game-detail-muted';
-        versionNote.textContent = detailText(
-            'The commercial version is shown above. These entries are Nintendo internal build numbers used to compare updates.',
-            'The commercial version is shown above. These entries are Nintendo internal build numbers used to compare updates.'
-        );
-        versionList.appendChild(versionNote);
-        if (!versions.length) {
-            const empty = document.createElement('p');
-            empty.className = 'game-detail-muted';
-            empty.textContent = detailText('No update versions listed.', 'No update versions listed.');
-            versionList.appendChild(empty);
-        } else {
-            versions.slice(-5).reverse().forEach(version => {
-                const row = document.createElement('div');
-                row.className = 'game-version-row';
-                const versionName = document.createElement('strong');
-                versionName.textContent = formatGameVersion(version.version);
-                const release = document.createElement('span');
-                release.textContent = formatGameDate(version.releaseDate) || detailText('Release date unknown', 'Release date unknown');
-                row.append(versionName, release);
-                versionList.appendChild(row);
-            });
-        }
     }
 
     async function openGameDetails(game) {
