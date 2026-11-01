@@ -392,7 +392,6 @@
     const HOME_SHELVES = [
         {id: 'owned', title: 'Your library', eyebrow: 'IN YOUR COLLECTION', filters: {owned: true}},
         {id: 'updates', title: 'Updates available', eyebrow: 'READY TO UPDATE', filters: {owned: true, upToDate: false}},
-        {id: 'discover', title: 'Discover', eyebrow: 'FROM THE CATALOGUE', filters: {owned: false}},
     ];
 
     function hasActiveLibraryFilters() {
@@ -533,9 +532,7 @@
             total: result.apps.total,
             games: result.apps.items.map(cardModel),
         }));
-        const featured = shelves.find(shelf => shelf.config.id === 'owned' && shelf.games.length)?.games[0]
-            || shelves.find(shelf => shelf.config.id === 'discover' && shelf.games.length)?.games[0]
-            || null;
+        const featured = shelves.find(shelf => shelf.config.id === 'owned' && shelf.games.length)?.games[0] || null;
         renderFeaturedGame(featured);
         shelves.forEach(shelf => {
             if (shelf.games.length) container.appendChild(renderHomeShelf(shelf.config, shelf.games, shelf.total));
