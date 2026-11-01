@@ -122,9 +122,11 @@ _LATEST_VERSION_OWNED = """(
 # OR across columns has to be its own argument.
 _APP_SEARCH = """(
     tda.name LIKE :search COLLATE NOCASE
+    OR tda.version LIKE :search COLLATE NOCASE
     OR td.name LIKE :search COLLATE NOCASE
     OR a.app_id LIKE :search COLLATE NOCASE
     OR ot.title_id LIKE :search COLLATE NOCASE
+    OR CAST(a.app_version AS TEXT) LIKE :search COLLATE NOCASE
 )"""
 
 _TITLE_SEARCH = """(
