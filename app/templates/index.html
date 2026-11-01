@@ -795,6 +795,11 @@
     function formatCommercialVersion(value) {
         if (value === null || value === undefined || String(value).trim() === '') return '';
         const version = String(value).trim();
+        // TitleDB stores commercial versions as Nintendo's packed integer
+        // (for example 851968 is 13.0.0), not as a human-readable string.
+        if (/^\d+$/.test(version) && Number(version) >= 0x10000) {
+            return formatGameVersion(Number(version));
+        }
         return /^v/i.test(version) ? version : `v${version}`;
     }
 
@@ -974,7 +979,12 @@
             row.className = 'game-dlc-row';
             const meta = item.titledb || {};
             const type = item.appType === 'UPDATE' ? 'Update' : 'DLC';
-            const version = meta.version || item.appVersion;
+            // UPDATE rows have their own internal build number.  The parent
+            // title metadata contains only the latest catalogue version, so
+            // using meta.version here makes every historical row look equal.
+            const version = item.appType === 'UPDATE'
+                ? item.appVersion
+                : (meta.version || item.appVersion);
             const name = document.createElement('span');
             name.className = 'game-dlc-name';
             name.textContent = `${type} · ${meta.name || item.appId}${version ? ` · ${formatGameVersion(version)}` : ''}`;
