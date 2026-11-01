@@ -210,7 +210,7 @@
                                 <span id="gameDlcCount" class="game-detail-section-note"></span>
                             </div>
                             <div id="gameDlcList" class="game-dlc-list"></div>
-                            <p id="gameDlcEmpty" class="game-detail-muted d-none">No DLC listed in the catalogue.</p>
+                            <p id="gameDlcEmpty" class="game-detail-muted d-none">No DLC in your library.</p>
                         </section>
                     </div>
                     <aside class="col-lg-4 game-detail-sidebar">
@@ -232,7 +232,7 @@
                             <h3 id="gameOwnershipHeading">Your library</h3>
                             <div id="gameOwnershipStatus" class="game-ownership-status"></div>
                             <div id="gameDetailContentList" class="game-dlc-list"></div>
-                            <p id="gameDetailContentEmpty" class="game-detail-muted">No updates or DLC listed.</p>
+                            <p id="gameDetailContentEmpty" class="game-detail-muted">No updates or DLC in your library.</p>
                         </section>
                     </aside>
                 </div>
@@ -904,32 +904,33 @@
         const baseStatus = document.createElement('span');
         const selectedDlcOwned = game.app_type === 'DLC' && !!ownedApps.get(game.appId);
         const hasSelectedContent = game.app_type === 'DLC' ? selectedDlcOwned : hasBase;
-        const selectedStatusLabel = game.app_type === 'DLC'
-            ? detailText(selectedDlcOwned ? 'DLC in library' : 'DLC missing', selectedDlcOwned ? 'DLC in library' : 'DLC missing')
-            : detailText(hasBase ? 'In library' : 'Not in library', hasBase ? 'In library' : 'Not in library');
-        baseStatus.className = `game-ownership-chip ${hasSelectedContent ? 'is-owned' : 'is-missing'}`;
-        baseStatus.innerHTML = `<i class="bi ${hasSelectedContent ? 'bi-check-circle-fill' : 'bi-plus-circle'}" aria-hidden="true"></i>`;
-        baseStatus.append(document.createTextNode(selectedStatusLabel));
-        status.appendChild(baseStatus);
-        if (game.app_type === 'DLC') {
+        if (hasSelectedContent) {
+            const selectedStatusLabel = game.app_type === 'DLC'
+                ? detailText('DLC in library', 'DLC in library')
+                : detailText('In library', 'In library');
+            baseStatus.className = 'game-ownership-chip is-owned';
+            baseStatus.innerHTML = '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>';
+            baseStatus.append(document.createTextNode(selectedStatusLabel));
+            status.appendChild(baseStatus);
+        }
+        if (game.app_type === 'DLC' && hasBase) {
             const parentStatus = document.createElement('span');
-            parentStatus.className = `game-ownership-chip ${hasBase ? 'is-owned' : 'is-missing'}`;
-            parentStatus.textContent = detailText(hasBase ? 'Base game in library' : 'Base game missing', hasBase ? 'Base game in library' : 'Base game missing');
+            parentStatus.className = 'game-ownership-chip is-owned';
+            parentStatus.textContent = detailText('Base game in library', 'Base game in library');
             status.appendChild(parentStatus);
         }
-        if (ownership) {
+        if (ownership?.upToDate) {
             const updateStatus = document.createElement('span');
-            updateStatus.className = `game-ownership-chip ${ownership.upToDate ? 'is-owned' : 'is-missing'}`;
-            updateStatus.textContent = detailText(ownership.upToDate ? 'Up to date' : 'Update missing', ownership.upToDate ? 'Up to date' : 'Update missing');
+            updateStatus.className = 'game-ownership-chip is-owned';
+            updateStatus.textContent = detailText('Up to date', 'Up to date');
             status.appendChild(updateStatus);
         }
 
         const dlcList = document.getElementById('gameDlcList');
-        const dlc = title.availableDlc || [];
+        const dlc = (title.availableDlc || []).filter(item => ownedApps.get(item.appId));
         dlcList.replaceChildren();
-        const ownedDlcCount = dlc.filter(item => ownedApps.get(item.appId)).length;
         document.getElementById('gameDlcCount').textContent = dlc.length
-            ? `${ownedDlcCount}/${dlc.length} ${detailText('owned', 'owned')}` : '';
+            ? `${dlc.length} ${detailText('owned', 'owned')}` : '';
         document.getElementById('gameDlcEmpty').classList.toggle('d-none', dlc.length > 0);
         dlc.slice(0, 40).forEach(item => {
             const row = document.createElement('div');
@@ -963,7 +964,7 @@
 
         const contentList = document.getElementById('gameDetailContentList');
         contentList.replaceChildren();
-        const contentItems = (title.apps || []).filter(item => item.appType !== 'BASE');
+        const contentItems = (title.apps || []).filter(item => item.appType !== 'BASE' && item.owned);
         contentItems.forEach(item => {
             const row = document.createElement('div');
             row.className = 'game-dlc-row';
@@ -979,10 +980,7 @@
             name.className = 'game-dlc-name';
             name.textContent = `${type} · ${meta.name || item.appId}${version ? ` · ${formatGameVersion(version)}` : ''}`;
             name.title = `${item.appId} · ${meta.name || ''}`;
-            const state = document.createElement('span');
-            state.className = `game-dlc-state ${item.owned ? 'is-owned' : 'is-missing'}`;
-            state.textContent = detailText(item.owned ? 'Owned' : 'Missing', item.owned ? 'Owned' : 'Missing');
-            row.append(name, state);
+            row.appendChild(name);
             contentList.appendChild(row);
         });
         document.getElementById('gameDetailContentEmpty').classList.toggle('d-none', contentItems.length > 0);
