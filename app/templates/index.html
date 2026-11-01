@@ -34,8 +34,6 @@
                                     <input type="radio" class="btn-check ownership-toggle" name="ownershipFilter" id="ownershipOwned" autocomplete="off">
                                     <label class="btn btn-outline-primary" for="ownershipOwned">Owned</label>
 
-                                    <input type="radio" class="btn-check ownership-toggle" name="ownershipFilter" id="ownershipMissing" autocomplete="off">
-                                    <label class="btn btn-outline-primary" for="ownershipMissing">Missing</label>
                                 </div>
                             </div>
                         </li>
@@ -51,8 +49,6 @@
                                     <input type="radio" class="btn-check update-toggle" name="updateFilter" id="updateUpToDate" autocomplete="off">
                                     <label class="btn btn-outline-primary" for="updateUpToDate">Up to date</label>
 
-                                    <input type="radio" class="btn-check update-toggle" name="updateFilter" id="updateMissingUpdate" autocomplete="off">
-                                    <label class="btn btn-outline-primary" for="updateMissingUpdate">Missing Update</label>
                                 </div>
                             </div>
                         </li>
@@ -68,8 +64,6 @@
                                     <input type="radio" class="btn-check completion-toggle" name="completionFilter" id="completionComplete" autocomplete="off">
                                     <label class="btn btn-outline-primary" for="completionComplete">Complete</label>
 
-                                    <input type="radio" class="btn-check completion-toggle" name="completionFilter" id="completionMissingDlc" autocomplete="off">
-                                    <label class="btn btn-outline-primary" for="completionMissingDlc">Missing DLC</label>
                                 </div>
                             </div>
                         </li>
@@ -1261,13 +1255,9 @@
             const filters = JSON.parse(savedFilters);
 
             $('#ownershipOwned').prop('checked', filters.ownership === 'Owned');
-            $('#ownershipMissing').prop('checked', filters.ownership === 'Missing');
-
             $('#updateUpToDate').prop('checked', filters.update === 'Up to date');
-            $('#updateMissingUpdate').prop('checked', filters.update === 'Outdated');
 
             $('#completionComplete').prop('checked', filters.completion === 'Complete');
-            $('#completionMissingDlc').prop('checked', filters.completion === 'Missing DLC');
 
             updateFilter();
         }
@@ -1282,22 +1272,16 @@
     function updateFilter() {
         if ($('#ownershipOwned').is(":checked")) {
             activeOwnershipFilter = 'Owned';
-        } else if ($('#ownershipMissing').is(":checked")) {
-            activeOwnershipFilter = 'Missing';
         } else {
             activeOwnershipFilter = '';
         }
         if ($('#updateUpToDate').is(":checked")) {
             activeUpdateFilter = 'Up to date';
-        } else if ($('#updateMissingUpdate').is(":checked")) {
-            activeUpdateFilter = 'Outdated';
         } else {
             activeUpdateFilter = '';
         }
         if ($('#completionComplete').is(":checked")) {
             activeCompletionFilter = 'Complete';
-        } else if ($('#completionMissingDlc').is(":checked")) {
-            activeCompletionFilter = 'Missing DLC';
         } else {
             activeCompletionFilter = '';
         }
