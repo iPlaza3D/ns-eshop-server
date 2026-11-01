@@ -1,5 +1,5 @@
 import datetime
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Response
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, send_file, Response
 from flask_login import LoginManager
 from flask_sock import Sock
 from functools import wraps
@@ -25,6 +25,7 @@ from clients import CyberFoilClient, TinfoilClient, SphairaClient
 import discovery
 from maintenance import (backup_state, delete_duplicate, find_duplicate_groups,
                          list_changes, maintenance_report, undo_move)
+from artwork import get_cached_artwork
 
 def init():
     global watcher
@@ -626,4 +627,23 @@ def serve_game(id):
     # them, and a range past the end of the file raises out of here without transferring.
     response = send_from_directory(filedir, filename)
     increment_download_count_throttled(filepath, client_address(request))
+    return response
+
+
+@app.route('/api/artwork')
+@file_access
+def serve_artwork():
+    """Serve allow-listed catalogue artwork through the server-side cache."""
+    url = (request.args.get('url') or '').strip()
+    if not url:
+        return jsonify({'error': 'Missing artwork URL.'}), 400
+    try:
+        cached = get_cached_artwork(url)
+    except ValueError as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception as error:
+        logger.warning('Unable to cache artwork %s: %s', url, error)
+        return jsonify({'error': 'Artwork is not available.'}), 404
+    response = send_file(cached.path, mimetype=cached.content_type, max_age=604800)
+    response.headers['Cache-Control'] = 'public, max-age=604800, immutable'
     return response
