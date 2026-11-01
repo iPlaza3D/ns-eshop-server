@@ -238,6 +238,8 @@
                             <h3 id="gameOwnershipHeading">Your library</h3>
                             <div id="gameOwnershipStatus" class="game-ownership-status"></div>
                             <div id="gameDetailVersions" class="game-detail-versions"></div>
+                            <div id="gameDetailContentList" class="game-dlc-list"></div>
+                            <p id="gameDetailContentEmpty" class="game-detail-muted">No updates or DLC listed.</p>
                         </section>
                     </aside>
                 </div>
@@ -262,6 +264,15 @@
     let activeDetailGame = null;
     let featuredGame = null;
     const FAVORITES_STORAGE_KEY = 'ns-eshop-server-favorites';
+
+    // Keep artwork on the server, like the Switch client does on its SD card.
+    function artworkUrl(url) {
+        if (!url || url === PLACEHOLDER_BANNER) return url || '';
+        if (/^https?:\/\/img-eshop\.cdn\.nintendo\.net\//i.test(url)) {
+            return `/api/artwork?url=${encodeURIComponent(url)}`;
+        }
+        return url;
+    }
 
     document.getElementById('gameDetailsModal').addEventListener('hidden.bs.modal', () => {
         detailFetchSeq++;
@@ -324,8 +335,9 @@
                 items {
                     appId
                     appType
+                    appVersion
                     owned
-                    titledb { name bannerUrl iconUrl }
+                    titledb { name version bannerUrl iconUrl frontBoxArt }
                     title { titleId name version bannerUrl iconUrl ownership { haveBase upToDate complete } }
                     versions { version owned releaseDate }
                 }
@@ -340,8 +352,8 @@
                  upToDate: $upToDate, complete: $complete) {
                 total
                 items {
-                    appId appType owned
-                    titledb { name iconUrl }
+                    appId appType appVersion owned
+                    titledb { name version bannerUrl iconUrl frontBoxArt }
                     title { titleId name version bannerUrl iconUrl ownership { haveBase upToDate complete } }
                 }
             }
@@ -355,8 +367,11 @@
                 ratingContent region regions languages
                 ownership { haveBase upToDate complete }
                 availableVersions { version releaseDate }
-                availableDlc { appId version titledb { name iconUrl } }
-                apps(appType: [BASE, UPDATE, DLC]) { appId appType owned }
+                availableDlc { appId version titledb { name version bannerUrl iconUrl frontBoxArt } }
+                apps(appType: [BASE, UPDATE, DLC]) {
+                    appId appType appVersion owned
+                    titledb { name version bannerUrl iconUrl frontBoxArt }
+                }
             }
         }`;
 
@@ -365,7 +380,9 @@
         return {
             page: page,
             pageSize: pageSize,
-            appType: ['BASE'],
+            // Normal browsing is grouped by base game. A search must also be able
+            // to find an update or DLC by its own name, id, or version.
+            appType: search ? ['BASE', 'UPDATE', 'DLC'] : ['BASE'],
             search: search || null,
             owned: activeOwnershipFilter ? activeOwnershipFilter === 'Owned' : null,
             upToDate: activeUpdateFilter ? activeUpdateFilter === 'Up to date' : null,
@@ -406,7 +423,7 @@
         section.classList.remove('d-none');
         const banner = document.getElementById('featuredGameBanner');
         if (game.bannerUrl && game.bannerUrl !== PLACEHOLDER_BANNER) {
-            banner.src = game.bannerUrl;
+            banner.src = artworkUrl(game.bannerUrl);
             banner.classList.remove('d-none');
         } else {
             banner.removeAttribute('src');
@@ -481,7 +498,7 @@
 
             const art = document.createElement('img');
             art.className = 'shelf-game-art';
-            art.src = currentView === 'icon' && game.iconUrl ? game.iconUrl : game.bannerUrl || PLACEHOLDER_BANNER;
+            art.src = artworkUrl(currentView === 'icon' && game.iconUrl ? game.iconUrl : game.bannerUrl || PLACEHOLDER_BANNER);
             art.alt = '';
             card.appendChild(art);
 
@@ -661,6 +678,8 @@
             release_date: v.releaseDate || 'Unknown',
         }));
         const isBase = app.appType === 'BASE';
+        const commercialVersion = meta.version || title.version || null;
+        const internalVersion = app.appVersion || null;
         const recognized = isBase ? !!title.name : !!meta.name;
 
         if (isBase) {
@@ -677,6 +696,7 @@
                 has_latest_version: ownership.haveBase && ownership.upToDate,
                 has_all_dlcs: ownership.complete,
                 version: versions,
+                commercial_version: commercialVersion,
             };
         }
 
@@ -687,7 +707,9 @@
             titleId: title.titleId,
             appId: app.appId,
             title_id_name: title.name || 'Unrecognized',
-            name: meta.name || 'Unrecognized',
+            name: meta.name || (app.appType === 'UPDATE'
+                ? `${title.name || 'Update'} · ${formatGameVersion(internalVersion)}`
+                : `${title.name || 'Content'} · DLC`),
             // Updates often have no independent titledb artwork.  Their parent
             // title is the canonical source, while DLC keeps its own artwork when
             // available and falls back to the parent only when it is missing.
@@ -697,6 +719,7 @@
             owned: app.owned,
             has_latest_version: ownedVersions.length > 0 && Math.max(...ownedVersions) >= highest,
             version: versions,
+            commercial_version: commercialVersion,
         };
     }
 
@@ -822,7 +845,7 @@
             : title.bannerUrl;
         const banner = document.getElementById('gameDetailBanner');
         if (heroBanner) {
-            banner.src = heroBanner;
+            banner.src = artworkUrl(heroBanner);
             banner.classList.remove('d-none');
         } else {
             banner.removeAttribute('src');
@@ -846,7 +869,7 @@
         const boxUrl = contentMeta.frontBoxArt || title.frontBoxArt || contentMeta.iconUrl || game.iconUrl;
         const placeholder = document.getElementById('gameDetailBoxPlaceholder');
         if (boxUrl) {
-            boxArt.src = boxUrl;
+            boxArt.src = artworkUrl(boxUrl);
             boxArt.alt = '';
             boxArt.classList.remove('d-none');
             placeholder.classList.add('d-none');
@@ -917,21 +940,19 @@
         dlc.slice(0, 40).forEach(item => {
             const row = document.createElement('div');
             row.className = 'game-dlc-row';
-            const iconUrl = item.titledb?.iconUrl;
-            if (iconUrl) {
-                const icon = document.createElement('img');
-                icon.src = iconUrl;
-                icon.alt = '';
-                row.appendChild(icon);
-            } else {
-                const icon = document.createElement('span');
-                icon.className = 'game-dlc-icon';
-                icon.innerHTML = '<i class="bi bi-box-seam" aria-hidden="true"></i>';
-                row.appendChild(icon);
-            }
+            const meta = item.titledb || {};
+            const icon = document.createElement('img');
+            icon.className = 'game-dlc-icon';
+            icon.alt = '';
+            icon.src = artworkUrl(meta.iconUrl || meta.bannerUrl || title.iconUrl || title.bannerUrl || PLACEHOLDER_BANNER);
+            icon.addEventListener('error', () => {
+                icon.src = artworkUrl(PLACEHOLDER_BANNER);
+            }, {once: true});
+            row.appendChild(icon);
             const name = document.createElement('span');
             name.className = 'game-dlc-name';
-            name.textContent = item.titledb?.name || item.appId;
+            const version = meta.version || item.version;
+            name.textContent = `${meta.name || item.appId}${version ? ` · ${formatGameVersion(version)}` : ''}`;
             const owned = !!ownedApps.get(item.appId);
             const state = document.createElement('span');
             state.className = `game-dlc-state ${owned ? 'is-owned' : 'is-missing'}`;
@@ -945,6 +966,27 @@
             remainder.textContent = detailText('and more...', 'and more...');
             dlcList.appendChild(remainder);
         }
+
+        const contentList = document.getElementById('gameDetailContentList');
+        contentList.replaceChildren();
+        const contentItems = (title.apps || []).filter(item => item.appType !== 'BASE');
+        contentItems.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'game-dlc-row';
+            const meta = item.titledb || {};
+            const type = item.appType === 'UPDATE' ? 'Update' : 'DLC';
+            const version = meta.version || item.appVersion;
+            const name = document.createElement('span');
+            name.className = 'game-dlc-name';
+            name.textContent = `${type} · ${meta.name || item.appId}${version ? ` · ${formatGameVersion(version)}` : ''}`;
+            name.title = `${item.appId} · ${meta.name || ''}`;
+            const state = document.createElement('span');
+            state.className = `game-dlc-state ${item.owned ? 'is-owned' : 'is-missing'}`;
+            state.textContent = detailText(item.owned ? 'Owned' : 'Missing', item.owned ? 'Owned' : 'Missing');
+            row.append(name, state);
+            contentList.appendChild(row);
+        });
+        document.getElementById('gameDetailContentEmpty').classList.toggle('d-none', contentItems.length > 0);
 
         const versionList = document.getElementById('gameDetailVersions');
         versionList.replaceChildren();
@@ -1032,7 +1074,7 @@
                 }
             });
 
-            const img = $('<img class="card-img"></img>').attr('src', game.bannerUrl);
+            const img = $('<img class="card-img"></img>').attr('src', artworkUrl(game.bannerUrl));
             card.append(img);
 
             const favoriteIndicator = $('<span class="game-favorite-indicator" aria-hidden="true"><i class="bi bi-star-fill"></i></span>');
@@ -1115,7 +1157,7 @@
                 .attr('aria-label', `${detailText('View details for', 'View details for')} ${game.title_id_name}`)
                 .attr('data-favorite-title-id', game.titleId || game.appId)
                 .on('click', () => openGameDetails(game));
-            const icon = $('<img class="game-icon">').attr('src', game.iconUrl).attr('alt', '');
+            const icon = $('<img class="game-icon">').attr('src', artworkUrl(game.iconUrl)).attr('alt', '');
             button.append(icon);
             const favoriteIndicator = $('<span class="game-favorite-indicator d-none" aria-hidden="true"><i class="bi bi-star-fill"></i></span>');
             favoriteIndicator.toggleClass('d-none', !isFavorite(game.titleId || game.appId));
