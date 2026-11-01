@@ -1240,9 +1240,9 @@ body {
 }
 
 .game-ownership-chip.is-missing {
-    border-color: rgba(240, 178, 118, .32);
-    color: #f0c49b;
-    background: rgba(240, 178, 118, .08);
+    border-color: rgba(230, 0, 18, .46);
+    color: #ff9da5;
+    background: rgba(230, 0, 18, .1);
 }
 
 .game-detail-facts {
@@ -1316,7 +1316,7 @@ body {
 }
 
 .game-dlc-state.is-owned { color: #b7d969; }
-.game-dlc-state.is-missing { color: var(--detail-muted); }
+.game-dlc-state.is-missing { color: #ff6b75; }
 
 .game-detail-versions h4 {
     margin: 1rem 0 .5rem;
